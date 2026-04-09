@@ -641,9 +641,12 @@
                     <span class="role-badge role-badge-ceo"><i class="bi bi-star-fill"></i>CEO</span>
                 {% endif %}
             {% endwith %}
-            <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
+            <form method="post" action="{% url 'logout' %}" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </form>
         </div>
     </div>
 
