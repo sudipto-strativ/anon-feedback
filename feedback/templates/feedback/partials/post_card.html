@@ -1,0 +1,115 @@
+{% load feedback_extras %}
+{% with user_vote=user_vote_map|get_item:post.id %}
+
+<div class="fb-card" id="post-card-{{ post.id }}">
+
+    <!-- Status stripe -->
+    <div class="fb-card-stripe {{ post.status }}"></div>
+
+    <!-- Header row -->
+    <div class="fb-card-header">
+        <div class="fb-avatar" style="background: {{ post.id|avatar_gradient }};">
+            <i class="bi bi-incognito" style="font-size:1.1rem;"></i>
+        </div>
+
+        <div class="flex-grow-1 min-width-0">
+            <div class="fb-avatar-name">Anonymous</div>
+            <div class="fb-avatar-time d-flex align-items-center gap-2">
+                <span>{{ post.created_at|timesince_short }}</span>
+                <span style="color:#d1d5db;">·</span>
+                <i class="bi bi-globe2" style="font-size:.7rem; color:#94a3b8;"></i>
+            </div>
+        </div>
+
+        <!-- Status badge + ETA -->
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            {% if post.eta %}
+            <span class="post-meta d-none d-sm-inline">
+                <i class="bi bi-calendar3"></i> {{ post.eta|date:"M d" }}
+            </span>
+            {% endif %}
+            <span class="status-pill {{ post.status }}">
+                {% if post.status == 'pending' %}<i class="bi bi-hourglass-split"></i>{% endif %}
+                {% if post.status == 'in_progress' %}<i class="bi bi-arrow-repeat"></i>{% endif %}
+                {% if post.status == 'done' %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                {% if post.status == 'rejected' %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+                {{ post.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Post body -->
+    <div class="fb-card-body">
+        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none">
+            <p class="fb-text {% if truncate != False %}truncated{% endif %}">
+                {{ post.content }}
+            </p>
+        </a>
+    </div>
+
+    <!-- Reaction counts -->
+    {% if post.like_count or post.dislike_count or post.comment_count %}
+    <div class="fb-counts">
+        <div class="fb-counts-left">
+            {% if post.like_count or post.dislike_count %}
+            <div class="fb-counts-icons">
+                {% if post.like_count %}
+                <div class="fb-reaction-icon" style="background:#1877f2;">
+                    <i class="bi bi-hand-thumbs-up-fill" style="color:#fff;"></i>
+                </div>
+                {% endif %}
+                {% if post.dislike_count %}
+                <div class="fb-reaction-icon" style="background:#ef4444;">
+                    <i class="bi bi-hand-thumbs-down-fill" style="color:#fff;"></i>
+                </div>
+                {% endif %}
+            </div>
+            <span>{{ post.score }}</span>
+            {% endif %}
+        </div>
+        {% if post.comment_count %}
+        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none" style="color:#65676b;">
+            {{ post.comment_count }} comment{{ post.comment_count|pluralize }}
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Divider -->
+    <div class="fb-divider"></div>
+
+    <!-- Action buttons -->
+    <div class="fb-actions">
+        <button
+            class="fb-action-btn {% if user_vote == 'like' %}active-like{% endif %}"
+            id="like-btn-post-{{ post.id }}"
+            onclick="votePost({{ post.id }}, 'like')"
+        >
+            <i class="bi bi-hand-thumbs-up{% if user_vote == 'like' %}-fill{% endif %}"></i>
+            Upvote
+        </button>
+
+        <div class="fb-action-divider"></div>
+
+        <button
+            class="fb-action-btn {% if user_vote == 'dislike' %}active-dislike{% endif %}"
+            id="dislike-btn-post-{{ post.id }}"
+            onclick="votePost({{ post.id }}, 'dislike')"
+        >
+            <i class="bi bi-hand-thumbs-down{% if user_vote == 'dislike' %}-fill{% endif %}"></i>
+            Downvote
+        </button>
+
+        <!-- Hidden score element used by JS -->
+        <span id="score-post-{{ post.id }}" class="d-none">{{ post.score }}</span>
+
+        <div class="fb-action-divider"></div>
+
+        <a href="{% url 'post_detail' post.id %}" class="fb-action-btn">
+            <i class="bi bi-chat-dots"></i>
+            Comment
+        </a>
+    </div>
+
+</div>
+{% endwith %}

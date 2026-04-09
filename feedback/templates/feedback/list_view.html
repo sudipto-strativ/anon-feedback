@@ -1,0 +1,160 @@
+{% extends "feedback/base.html" %}
+{% load feedback_extras %}
+
+{% block title %}List View — Strativ Voice{% endblock %}
+{% block page_title %}All Feedback{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-table me-2" style="color:#6366f1;"></i>All Feedback</h1>
+</div>
+
+<!-- Search / filter bar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3 px-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted mb-1">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search" style="color:#6366f1;"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ search_query }}"
+                           class="form-control border-start-0 ps-0"
+                           placeholder="Search feedback content...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for value, label in STATUS_CHOICES %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn flex-fill fw-semibold text-white"
+                            style="background:linear-gradient(135deg,#6366f1,#818cf8); border:none; border-radius:8px;">
+                        <i class="bi bi-funnel-fill me-1"></i> Filter
+                    </button>
+                    {% if search_query or status_filter %}
+                    <a href="{% url 'list_view' %}" class="btn btn-outline-secondary" title="Clear filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if search_query or status_filter %}
+<p class="small text-muted mb-3">
+    Showing <strong>{{ page_obj.paginator.count }}</strong> result{{ page_obj.paginator.count|pluralize }}
+    {% if search_query %} for "<strong>{{ search_query }}</strong>"{% endif %}
+    {% if status_filter %} · status: <strong>{{ status_filter }}</strong>{% endif %}
+</p>
+{% endif %}
+
+{% if page_obj %}
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr style="background: linear-gradient(90deg,#f8f9ff,#f1f3ff); border-bottom: 2px solid #e8eaf0;">
+                    <th class="ps-4 py-3 fw-700" style="color:#374151;">Feedback</th>
+                    <th class="py-3" style="color:#374151;">Status</th>
+                    <th class="py-3" style="color:#374151;">Score</th>
+                    <th class="py-3" style="color:#374151;"><i class="bi bi-chat-dots-fill" style="color:#6366f1;"></i></th>
+                    <th class="py-3" style="color:#374151;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in page_obj %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td class="ps-4 py-3" style="max-width: 420px;">
+                        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none fw-500"
+                           style="color:#1e2029;" title="{{ post.content }}">
+                            {{ post.content|truncate_chars:80 }}
+                        </a>
+                    </td>
+                    <td class="py-3">
+                        <span class="status-pill {{ post.status }}">
+                            {% if post.status == 'pending' %}<i class="bi bi-hourglass-split"></i>{% endif %}
+                            {% if post.status == 'in_progress' %}<i class="bi bi-arrow-repeat"></i>{% endif %}
+                            {% if post.status == 'done' %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                            {% if post.status == 'rejected' %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+                            {{ post.get_status_display }}
+                        </span>
+                        {% if post.eta %}
+                        <div class="post-meta mt-1"><i class="bi bi-calendar3"></i> {{ post.eta|date:"M d" }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="py-3">
+                        <span class="fw-bold {% if post.score > 0 %}text-success{% elif post.score < 0 %}text-danger{% else %}text-muted{% endif %}">
+                            {{ post.score }}
+                        </span>
+                    </td>
+                    <td class="py-3">
+                        <a href="{% url 'post_detail' post.id %}" class="comment-count-btn">
+                            <i class="bi bi-chat-dots-fill"></i> {{ post.comment_count }}
+                        </a>
+                    </td>
+                    <td class="py-3 post-meta">{{ post.created_at|timesince_short }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4" aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <div style="font-size:3rem;">📭</div>
+    <p class="text-muted mt-3">
+        {% if search_query or status_filter %}
+            No feedback matched your filters. <a href="{% url 'list_view' %}" style="color:#6366f1;">Clear filters</a>
+        {% else %}
+            No feedback posted yet.
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

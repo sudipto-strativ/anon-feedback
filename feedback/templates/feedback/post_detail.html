@@ -1,0 +1,226 @@
+{% extends "feedback/base.html" %}
+{% load feedback_extras %}
+
+{% block title %}Feedback #{{ post.id }} — Strativ Voice{% endblock %}
+{% block page_title %}Feedback Detail{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-12 col-md-10 col-lg-7 col-xl-6">
+
+    <!-- Back link -->
+    <a href="{% url 'feed' %}" class="text-decoration-none small fw-semibold d-inline-flex align-items-center gap-1 mb-3"
+       style="color:#6366f1;">
+        <i class="bi bi-arrow-left"></i> Back to Feed
+    </a>
+
+    <!-- ── POST CARD (fb-style, full text) ────────────────────── -->
+    <div class="fb-card mb-3">
+
+        <!-- Status stripe -->
+        <div class="fb-card-stripe {{ post.status }}"></div>
+
+        <!-- Header -->
+        <div class="fb-card-header">
+            <div class="fb-avatar" style="background: {{ post.id|avatar_gradient }};">
+                <i class="bi bi-incognito" style="font-size:1.1rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fb-avatar-name">Anonymous</div>
+                <div class="fb-avatar-time d-flex align-items-center gap-2">
+                    <span>{{ post.created_at|timesince_short }}</span>
+                    <span style="color:#d1d5db;">·</span>
+                    <i class="bi bi-globe2" style="font-size:.7rem; color:#94a3b8;"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                {% if post.eta %}
+                <span class="post-meta d-flex align-items-center gap-1"
+                      style="background:#f1f5f9; padding:3px 9px; border-radius:8px;">
+                    <i class="bi bi-calendar3"></i> {{ post.eta|date:"M d, Y" }}
+                </span>
+                {% endif %}
+                <span class="status-pill {{ post.status }}">
+                    {% if post.status == 'pending' %}<i class="bi bi-hourglass-split"></i>{% endif %}
+                    {% if post.status == 'in_progress' %}<i class="bi bi-arrow-repeat"></i>{% endif %}
+                    {% if post.status == 'done' %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                    {% if post.status == 'rejected' %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+                    {{ post.get_status_display }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Full content -->
+        <div class="fb-card-body">
+            <p class="fb-text" style="font-size:1rem; line-height:1.7;">{{ post.content }}</p>
+        </div>
+
+        <!-- Reaction counts -->
+        {% if post.like_count or post.dislike_count or post.comment_count %}
+        <div class="fb-counts">
+            <div class="fb-counts-left">
+                {% if post.like_count or post.dislike_count %}
+                <div class="fb-counts-icons">
+                    {% if post.like_count %}
+                    <div class="fb-reaction-icon" style="background:#1877f2;">
+                        <i class="bi bi-hand-thumbs-up-fill" style="color:#fff;"></i>
+                    </div>
+                    {% endif %}
+                    {% if post.dislike_count %}
+                    <div class="fb-reaction-icon" style="background:#ef4444;">
+                        <i class="bi bi-hand-thumbs-down-fill" style="color:#fff;"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <span id="score-post-{{ post.id }}">{{ post.score }}</span>
+                {% endif %}
+            </div>
+            {% if post.comment_count %}
+            <span style="color:#65676b;">{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
+            {% endif %}
+        </div>
+        {% else %}
+        <!-- Hidden score element for JS when there are no votes yet -->
+        <span id="score-post-{{ post.id }}" class="d-none">{{ post.score }}</span>
+        {% endif %}
+
+        <!-- Divider -->
+        <div class="fb-divider"></div>
+
+        <!-- Action bar -->
+        <div class="fb-actions">
+            <button
+                class="fb-action-btn {% if user_post_vote == 'like' %}active-like{% endif %}"
+                id="like-btn-post-{{ post.id }}"
+                onclick="votePost({{ post.id }}, 'like')"
+            >
+                <i class="bi bi-hand-thumbs-up{% if user_post_vote == 'like' %}-fill{% endif %}"></i>
+                Upvote
+            </button>
+            <div class="fb-action-divider"></div>
+            <button
+                class="fb-action-btn {% if user_post_vote == 'dislike' %}active-dislike{% endif %}"
+                id="dislike-btn-post-{{ post.id }}"
+                onclick="votePost({{ post.id }}, 'dislike')"
+            >
+                <i class="bi bi-hand-thumbs-down{% if user_post_vote == 'dislike' %}-fill{% endif %}"></i>
+                Downvote
+            </button>
+            <div class="fb-action-divider"></div>
+            <button class="fb-action-btn" onclick="document.getElementById('comment-input').focus()">
+                <i class="bi bi-chat-dots"></i>
+                Comment
+            </button>
+        </div>
+
+        <!-- Status update form (CEO/HR only) -->
+        {% if can_update_status %}
+        <div class="mx-3 mb-3 mt-1 p-3 rounded-3"
+             style="background:linear-gradient(135deg,#f8faff,#f0f4ff); border:1px solid #dde3f5;">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-pencil-square" style="color:#6366f1;"></i>
+                <span class="fw-bold small" style="color:#4c1d95;">Update Status</span>
+                <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% else %}role-badge-ceo{% endif %}">
+                    {{ request.user.profile.role_display }}
+                </span>
+            </div>
+            <form method="post" action="{% url 'update_status' post.id %}">
+                {% csrf_token %}
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-5">
+                        <label class="form-label small fw-semibold mb-1">Status</label>
+                        {{ status_form.status }}
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small fw-semibold mb-1">ETA</label>
+                        {{ status_form.eta }}
+                    </div>
+                    <div class="col-sm-3">
+                        <button type="submit" class="btn w-100 fw-semibold text-white"
+                                style="background:linear-gradient(135deg,#6366f1,#818cf8);border:none;border-radius:8px;">
+                            <i class="bi bi-check-lg me-1"></i>Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ── COMMENTS CARD ───────────────────────────────────────── -->
+    <div class="fb-card">
+        <div class="p-3 pb-0">
+            <span class="fw-bold" style="color:#1e2029; font-size:.95rem;">
+                Comments
+                {% if post.comment_count %}
+                <span style="color:#94a3b8; font-weight:400; font-size:.85rem;">· {{ post.comment_count }}</span>
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="p-3">
+
+            {% if comments %}
+                {% for comment in comments %}
+                    {% include "feedback/partials/comment.html" %}
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4">
+                    <div style="font-size:2.2rem;">💭</div>
+                    <p class="text-muted small mt-2 mb-0">No comments yet — start the conversation!</p>
+                </div>
+            {% endif %}
+
+            <!-- Comment compose row -->
+            <div class="d-flex gap-2 align-items-start mt-3 pt-3 border-top">
+                <div class="compose-avatar flex-shrink-0" style="width:36px;height:36px;font-size:.8rem;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <form method="post" class="flex-grow-1">
+                    {% csrf_token %}
+                    <div class="fb-comment-input-wrap">
+                        <textarea
+                            id="comment-input"
+                            name="content"
+                            class="fb-comment-input"
+                            placeholder="Write a comment…"
+                            rows="1"
+                            oninput="autoResize(this)"
+                        ></textarea>
+                        {% if comment_form.content.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in comment_form.content.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-end mt-2">
+                        <button type="submit" id="comment-submit-btn" class="btn btn-sm fw-semibold text-white px-4"
+                                style="background:linear-gradient(135deg,#e91e63,#ff6090);border:none;border-radius:20px;box-shadow:0 3px 8px rgba(233,30,99,.25);">
+                            <i class="bi bi-send-fill me-1"></i>Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
+document.querySelector('form[method="post"]:not([action])').addEventListener('submit', function () {
+    const btn = document.getElementById('comment-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Posting…';
+});
+</script>
+{% endblock %}

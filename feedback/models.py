@@ -1,0 +1,138 @@
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('employee', 'Employee'),
+        ('hr', 'HR'),
+        ('ceo', 'CEO'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role})"
+
+    @property
+    def role_display(self):
+        return dict(self.ROLE_CHOICES).get(self.role, 'Employee')
+
+
+class NotificationEmail(models.Model):
+    email = models.EmailField(unique=True)
+    notify_on_new_post = models.BooleanField(default=True)
+    notify_on_new_comment = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
+
+
+class SlackConfig(models.Model):
+    webhook_url = models.URLField()
+    channel_name = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Slack Configuration"
+
+    def __str__(self):
+        return f"Slack: {self.channel_name or self.webhook_url}"
+
+
+class Post(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('done', 'Done'),
+        ('rejected', 'Rejected'),
+    ]
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    content = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    eta = models.DateField(null=True, blank=True)
+    status_updated_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='status_updates'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Post by {self.author.username} at {self.created_at:%Y-%m-%d}"
+
+    @property
+    def like_count(self):
+        return self.votes.filter(vote_type='like').count()
+
+    @property
+    def dislike_count(self):
+        return self.votes.filter(vote_type='dislike').count()
+
+    @property
+    def score(self):
+        return self.like_count - self.dislike_count
+
+    @property
+    def comment_count(self):
+        return self.comments.count()
+
+    def get_status_color(self):
+        colors = {
+            'pending': 'warning',
+            'in_progress': 'primary',
+            'done': 'success',
+            'rejected': 'danger',
+        }
+        return colors.get(self.status, 'secondary')
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on Post #{self.post.id}"
+
+    @property
+    def like_count(self):
+        return self.votes.filter(vote_type='like').count()
+
+    @property
+    def dislike_count(self):
+        return self.votes.filter(vote_type='dislike').count()
+
+    @property
+    def score(self):
+        return self.like_count - self.dislike_count
+
+
+class Vote(models.Model):
+    VOTE_CHOICES = [('like', 'Like'), ('dislike', 'Dislike')]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='votes', null=True, blank=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='votes', null=True, blank=True)
+    vote_type = models.CharField(max_length=10, choices=VOTE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'post'],
+                condition=models.Q(post__isnull=False),
+                name='unique_post_vote'
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'comment'],
+                condition=models.Q(comment__isnull=False),
+                name='unique_comment_vote'
+            ),
+        ]

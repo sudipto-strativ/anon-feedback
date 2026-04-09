@@ -1,0 +1,64 @@
+{% load feedback_extras %}
+{% with user_vote=comment_vote_map|get_item:comment.id %}
+
+<div class="fb-comment" id="comment-card-{{ comment.id }}">
+
+    <!-- Role-coloured avatar -->
+    {% with role=comment.author.profile.role %}
+    <div class="fb-comment-avatar
+        {% if role == 'hr' %}fb-comment-avatar-hr
+        {% elif role == 'ceo' %}fb-comment-avatar-ceo
+        {% else %}fb-comment-avatar-employee{% endif %}">
+        {% if role == 'hr' %}<i class="bi bi-briefcase-fill"></i>
+        {% elif role == 'ceo' %}<i class="bi bi-star-fill"></i>
+        {% else %}<i class="bi bi-person-fill"></i>{% endif %}
+    </div>
+
+    <div class="fb-comment-right">
+        <!-- Bubble -->
+        <div class="fb-comment-bubble">
+            <div class="fb-comment-meta">
+                {% if role == 'hr' %}
+                    <span class="role-badge role-badge-hr"><i class="bi bi-briefcase-fill"></i> HR</span>
+                {% elif role == 'ceo' %}
+                    <span class="role-badge role-badge-ceo"><i class="bi bi-star-fill"></i> CEO</span>
+                {% else %}
+                    <span class="role-badge role-badge-employee"><i class="bi bi-person-fill"></i> Employee</span>
+                {% endif %}
+                <span class="fb-comment-time">{{ comment.created_at|timesince_short }}</span>
+            </div>
+            <p class="fb-comment-text">{{ comment.content }}</p>
+        </div>
+
+        <!-- Inline reactions -->
+        <div class="fb-comment-reactions">
+            <button
+                class="fb-comment-react {% if user_vote == 'like' %}active-like{% endif %}"
+                id="like-btn-comment-{{ comment.id }}"
+                onclick="voteComment({{ comment.id }}, 'like')"
+            >
+                <i class="bi bi-hand-thumbs-up{% if user_vote == 'like' %}-fill{% endif %}"></i>
+                Like
+            </button>
+            <span class="fb-comment-dot">·</span>
+            <button
+                class="fb-comment-react {% if user_vote == 'dislike' %}active-dislike{% endif %}"
+                id="dislike-btn-comment-{{ comment.id }}"
+                onclick="voteComment({{ comment.id }}, 'dislike')"
+            >
+                <i class="bi bi-hand-thumbs-down{% if user_vote == 'dislike' %}-fill{% endif %}"></i>
+            </button>
+            {% if comment.score != 0 %}
+            <span
+                class="fb-comment-score {% if comment.score > 0 %}positive{% elif comment.score < 0 %}negative{% endif %}"
+                id="score-comment-{{ comment.id }}"
+            >{{ comment.score }}</span>
+            {% else %}
+            <span id="score-comment-{{ comment.id }}" class="fb-comment-score" style="display:none;">0</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endwith %}
+
+</div>
+{% endwith %}
