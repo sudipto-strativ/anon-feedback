@@ -12,8 +12,29 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import CommentForm, PostForm, RegisterForm, StatusUpdateForm
-from .models import Comment, Post, Vote
+from .models import Comment, Favourite, Post, Vote
 from .notifications import notify_new_comment, notify_new_post, notify_status_update
+
+
+def _build_vote_map(user, post_ids):
+    """Return {post_id: vote_type} for the given user and post ids."""
+    if not post_ids:
+        return {}
+    votes = Vote.objects.filter(
+        user=user, post_id__in=post_ids, comment__isnull=True
+    ).values('post_id', 'vote_type')
+    return {v['post_id']: v['vote_type'] for v in votes}
+
+
+def _build_favourite_set(user, post_ids):
+    """Return {post_id: True} for posts the user has favourited."""
+    if not post_ids:
+        return {}
+    return {
+        pk: True for pk in Favourite.objects.filter(
+            user=user, post_id__in=post_ids
+        ).values_list('post_id', flat=True)
+    }
 
 
 @login_required
@@ -42,26 +63,13 @@ def feed(request):
         # Default: recent
         posts = posts.order_by('-created_at')
 
-    # Build user vote map
-    user_vote_map = {}
-    if isinstance(posts, list):
-        post_ids = [p.id for p in posts]
-    else:
-        post_ids = list(posts.values_list('id', flat=True))
-
-    if post_ids:
-        user_votes = Vote.objects.filter(
-            user=request.user,
-            post_id__in=post_ids,
-            comment__isnull=True,
-        ).values('post_id', 'vote_type')
-        for v in user_votes:
-            user_vote_map[v['post_id']] = v['vote_type']
+    post_ids = [p.id for p in posts] if isinstance(posts, list) else list(posts.values_list('id', flat=True))
 
     return render(request, 'feedback/feed.html', {
         'posts': posts,
         'current_tab': current_tab,
-        'user_vote_map': user_vote_map,
+        'user_vote_map': _build_vote_map(request.user, post_ids),
+        'favourite_set': _build_favourite_set(request.user, post_ids),
     })
 
 
@@ -87,17 +95,7 @@ def list_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Build user vote map for this page
-    user_vote_map = {}
     page_post_ids = [p.id for p in page_obj]
-    if page_post_ids:
-        user_votes = Vote.objects.filter(
-            user=request.user,
-            post_id__in=page_post_ids,
-            comment__isnull=True,
-        ).values('post_id', 'vote_type')
-        for v in user_votes:
-            user_vote_map[v['post_id']] = v['vote_type']
 
     return render(request, 'feedback/list_view.html', {
         'posts': page_obj,
@@ -105,7 +103,8 @@ def list_view(request):
         'status_filter': status_filter,
         'search_query': search_query,
         'STATUS_CHOICES': Post.STATUS_CHOICES,
-        'user_vote_map': user_vote_map,
+        'user_vote_map': _build_vote_map(request.user, page_post_ids),
+        'favourite_set': _build_favourite_set(request.user, page_post_ids),
     })
 
 
@@ -312,6 +311,43 @@ def update_status(request, pk):
                 messages.error(request, f'{field}: {error}')
 
     return redirect('post_detail', pk=pk)
+
+
+@login_required
+@require_POST
+def toggle_favourite(request, pk):
+    """Toggle a post as favourite. Returns JSON {is_favourite: bool}."""
+    post = get_object_or_404(Post, pk=pk)
+    fav = Favourite.objects.filter(user=request.user, post=post).first()
+    if fav:
+        fav.delete()
+        is_favourite = False
+    else:
+        Favourite.objects.create(user=request.user, post=post)
+        is_favourite = True
+    return JsonResponse({'is_favourite': is_favourite})
+
+
+@login_required
+def favourites_feed(request):
+    """Feed showing only the current user's favourited posts."""
+    favourited_post_ids = Favourite.objects.filter(
+        user=request.user
+    ).values_list('post_id', flat=True)
+
+    posts = Post.objects.filter(
+        id__in=favourited_post_ids
+    ).select_related('author', 'author__profile').prefetch_related(
+        'votes', 'comments'
+    ).order_by('-created_at')
+
+    post_ids = list(posts.values_list('id', flat=True))
+
+    return render(request, 'feedback/favourites.html', {
+        'posts': posts,
+        'user_vote_map': _build_vote_map(request.user, post_ids),
+        'favourite_set': _build_favourite_set(request.user, post_ids),
+    })
 
 
 def register(request):

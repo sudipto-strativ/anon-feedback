@@ -299,8 +299,9 @@
         }
 
         .fb-action-btn:hover { background: #f2f2f2; color: #1e2029; }
-        .fb-action-btn.active-like  { color: #1877f2; }
+        .fb-action-btn.active-like    { color: #1877f2; }
         .fb-action-btn.active-dislike { color: #ef4444; }
+        .fb-action-btn.active-fav     { color: #f59e0b; }
 
         .fb-action-divider {
             width: 1px; background: #eff0f1; margin: 6px 0; align-self: stretch;
@@ -589,6 +590,9 @@
         <a href="{% url 'post_create' %}" class="{% if request.resolver_match.url_name == 'post_create' %}active{% endif %}">
             <i class="bi bi-plus-circle-fill"></i> New Feedback
         </a>
+        <a href="{% url 'favourites' %}" class="{% if request.resolver_match.url_name == 'favourites' %}active{% endif %}">
+            <i class="bi bi-bookmark-fill"></i> Favourites
+        </a>
     </div>
 
     <div class="sidebar-stats">
@@ -740,6 +744,29 @@ function updateVoteUI(type, id, data) {
     // Update visible reaction count in fb-counts row
     const countSpan = document.querySelector(`#post-card-${id} .fb-counts-left > span`);
     if (countSpan) countSpan.textContent = data.score;
+}
+
+function toggleFavourite(postId) {
+    fetch(`/post/${postId}/favourite/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() },
+    })
+    .then(r => r.json())
+    .then(data => {
+        const btn = document.getElementById(`fav-btn-post-${postId}`);
+        if (!btn) return;
+        const icon = btn.querySelector('i');
+        if (data.is_favourite) {
+            btn.classList.add('active-fav');
+            icon.className = 'bi bi-bookmark-fill';
+            btn.title = 'Remove from favourites';
+        } else {
+            btn.classList.remove('active-fav');
+            icon.className = 'bi bi-bookmark';
+            btn.title = 'Save to favourites';
+        }
+    })
+    .catch(console.error);
 }
 
 function openSidebar() {

@@ -115,6 +115,20 @@ class Comment(models.Model):
         return self.like_count - self.dislike_count
 
 
+class Favourite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favourites')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='favourited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'post'], name='unique_favourite')
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} → Post #{self.post.id}"
+
+
 class Vote(models.Model):
     VOTE_CHOICES = [('like', 'Like'), ('dislike', 'Dislike')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')

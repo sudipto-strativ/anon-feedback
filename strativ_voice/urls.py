@@ -12,6 +12,8 @@ urlpatterns = [
     path('post/<int:pk>/vote/', feedback_views.vote_post, name='vote_post'),
     path('post/<int:pk>/update-status/', feedback_views.update_status, name='update_status'),
     path('comment/<int:pk>/vote/', feedback_views.vote_comment, name='vote_comment'),
+    path('post/<int:pk>/favourite/', feedback_views.toggle_favourite, name='toggle_favourite'),
+    path('favourites/', feedback_views.favourites_feed, name='favourites'),
     path('register/', feedback_views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='feedback/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

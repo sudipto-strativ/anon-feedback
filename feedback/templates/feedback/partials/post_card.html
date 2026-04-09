@@ -1,5 +1,6 @@
 {% load feedback_extras %}
 {% with user_vote=user_vote_map|get_item:post.id %}
+{% with is_fav=favourite_set|get_item:post.id %}
 
 <div class="fb-card" id="post-card-{{ post.id }}">
 
@@ -109,7 +110,20 @@
             <i class="bi bi-chat-dots"></i>
             Comment
         </a>
+
+        <div class="fb-action-divider"></div>
+
+        <button
+            class="fb-action-btn {% if is_fav %}active-fav{% endif %}"
+            id="fav-btn-post-{{ post.id }}"
+            onclick="toggleFavourite({{ post.id }})"
+            title="{% if is_fav %}Remove from favourites{% else %}Save to favourites{% endif %}"
+        >
+            <i class="bi bi-bookmark{% if is_fav %}-fill{% endif %}"></i>
+            Save
+        </button>
     </div>
 
 </div>
+{% endwith %}
 {% endwith %}
