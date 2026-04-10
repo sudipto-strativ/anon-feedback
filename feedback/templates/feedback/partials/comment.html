@@ -47,6 +47,7 @@
                 onclick="voteComment({{ comment.id }}, 'dislike')"
             >
                 <i class="bi bi-hand-thumbs-down{% if user_vote == 'dislike' %}-fill{% endif %}"></i>
+                Dislike
             </button>
             {% if comment.score != 0 %}
             <span

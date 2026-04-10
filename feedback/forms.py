@@ -47,8 +47,21 @@ class CommentForm(forms.ModelForm):
 class StatusUpdateForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['status', 'eta']
+        fields = ['status', 'eta', 'remark']
         widgets = {
-            'eta': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'eta': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'remark': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Required when marking as Done or Rejected — summarise the outcome or reason.',
+            }),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        status = cleaned_data.get('status')
+        remark = cleaned_data.get('remark', '').strip()
+        if status in ('done', 'rejected') and not remark:
+            self.add_error('remark', 'A remark is required when marking a post as Done or Rejected.')
+        return cleaned_data

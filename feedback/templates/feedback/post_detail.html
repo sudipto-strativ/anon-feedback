@@ -55,6 +55,23 @@
             <p class="fb-text" style="font-size:1rem; line-height:1.7;">{{ post.content }}</p>
         </div>
 
+        <!-- Remark (visible to all when set) -->
+        {% if post.remark %}
+        <div class="mx-0 mb-3 p-3 rounded-3 d-flex gap-3"
+             style="background:{% if post.status == 'done' %}#f0fdf4{% else %}#fff5f5{% endif %};
+                    border-left: 4px solid {% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};">
+            <i class="bi bi-chat-left-quote-fill mt-1 flex-shrink-0"
+               style="color:{% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};"></i>
+            <div>
+                <div class="fw-semibold small mb-1"
+                     style="color:{% if post.status == 'done' %}#064e3b{% else %}#7f1d1d{% endif %};">
+                    {% if post.status == 'done' %}Resolution Summary{% else %}Rejection Reason{% endif %}
+                </div>
+                <p class="mb-0 small" style="color:#374151; line-height:1.6;">{{ post.remark }}</p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Reaction counts -->
         {% if post.like_count or post.dislike_count or post.comment_count %}
         <div class="fb-counts">
@@ -126,21 +143,34 @@
             </div>
             <form method="post" action="{% url 'update_status' post.id %}">
                 {% csrf_token %}
-                <div class="row g-2 align-items-end">
-                    <div class="col-sm-5">
+                <div class="row g-2 mb-2">
+                    <div class="col-sm-6">
                         <label class="form-label small fw-semibold mb-1">Status</label>
                         {{ status_form.status }}
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                         <label class="form-label small fw-semibold mb-1">ETA</label>
                         {{ status_form.eta }}
                     </div>
-                    <div class="col-sm-3">
-                        <button type="submit" class="btn w-100 fw-semibold text-white"
-                                style="background:linear-gradient(135deg,#6366f1,#818cf8);border:none;border-radius:8px;">
-                            <i class="bi bi-check-lg me-1"></i>Save
-                        </button>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-semibold mb-1">
+                        Remark
+                        <span class="text-danger" id="remark-required-indicator" style="display:none;">*</span>
+                        <span class="text-muted fw-normal">(required for Done / Rejected)</span>
+                    </label>
+                    {{ status_form.remark }}
+                    {% if status_form.remark.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in status_form.remark.errors %}{{ error }}{% endfor %}
                     </div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn fw-semibold text-white px-4"
+                            style="background:linear-gradient(135deg,#6366f1,#818cf8);border:none;border-radius:8px;">
+                        <i class="bi bi-check-lg me-1"></i>Save
+                    </button>
                 </div>
             </form>
         </div>
@@ -215,6 +245,18 @@
 function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
+}
+
+// Show/hide remark required indicator based on selected status
+const statusSelect = document.getElementById('id_status');
+const remarkIndicator = document.getElementById('remark-required-indicator');
+if (statusSelect && remarkIndicator) {
+    function updateRemarkIndicator() {
+        const needsRemark = ['done', 'rejected'].includes(statusSelect.value);
+        remarkIndicator.style.display = needsRemark ? 'inline' : 'none';
+    }
+    statusSelect.addEventListener('change', updateRemarkIndicator);
+    updateRemarkIndicator();
 }
 
 document.querySelector('form[method="post"]:not([action])').addEventListener('submit', function () {

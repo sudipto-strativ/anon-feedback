@@ -40,7 +40,10 @@ def _post_url(post):
 def notify_new_post(post):
     """Notify admins about a new post via Slack and email."""
     url = _post_url(post)
-    msg = f"*New Feedback Posted*:\n>{post.content[:200]}\n{url}"
+    msg = (
+        f":mega: *<{url}|New Feedback Posted>*\n"
+        f">{post.content[:200]}"
+    )
     send_slack_message(msg)
 
     if not getattr(settings, 'EMAIL_NOTIFICATION_ENABLED', True):
@@ -75,8 +78,8 @@ def notify_new_comment(comment):
         role_display = 'Employee'
 
     msg = (
-        f"*New Comment* on Feedback #{post.id} ({role_display}):\n"
-        f">{comment.content[:200]}\n{url}"
+        f":speech_balloon: *<{url}|New Comment>* · _{role_display}_\n"
+        f">{comment.content[:200]}"
     )
     send_slack_message(msg)
 
@@ -106,9 +109,13 @@ def notify_status_update(post, updated_by):
     """Notify about a status update via Slack."""
     url = _post_url(post)
     eta_str = f" | ETA: {post.eta}" if post.eta else ""
+    if post.status in ('done', 'rejected') and post.remark:
+        preview = post.remark[:200]
+    else:
+        preview = post.content[:150]
+
     msg = (
-        f"*Status Updated* on Feedback #{post.id} by `{updated_by.username}`:\n"
-        f"Status: *{post.get_status_display()}*{eta_str}\n"
-        f">Post: {post.content[:150]}\n{url}"
+        f":pencil2: *<{url}|Feedback #{post.id}>* status updated to *{post.get_status_display()}*{eta_str}\n"
+        f">{preview}"
     )
     send_slack_message(msg)

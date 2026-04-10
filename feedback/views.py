@@ -305,11 +305,12 @@ def update_status(request, pk):
         updated_post.save()
         notify_status_update(updated_post, request.user)
         messages.success(request, f'Status updated to "{updated_post.get_status_display()}".')
-    else:
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(request, f'{field}: {error}')
+        return redirect('post_detail', pk=pk)
 
+    # Form invalid — re-render detail page with errors
+    for field, errors in form.errors.items():
+        for error in errors:
+            messages.error(request, error)
     return redirect('post_detail', pk=pk)
 
 
