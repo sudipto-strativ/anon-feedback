@@ -1,6 +1,9 @@
 from django import template
 from django.utils import timezone
 from django.utils.timesince import timesince
+from django.utils.safestring import mark_safe
+import markdown
+import bleach
 
 register = template.Library()
 
@@ -74,6 +77,35 @@ def score_class(score):
         return 'neutral'
     except (ValueError, TypeError):
         return 'neutral'
+
+
+_MD_ALLOWED_TAGS = [
+    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'strong', 'em', 'del', 's', 'code', 'pre', 'blockquote',
+    'ul', 'ol', 'li', 'hr', 'br', 'a', 'img',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+]
+_MD_ALLOWED_ATTRS = {
+    'a':   ['href', 'title', 'rel'],
+    'img': ['src', 'alt', 'title'],
+    'code': ['class'],
+    'pre':  ['class'],
+    'th':   ['align'],
+    'td':   ['align'],
+}
+
+
+@register.filter(is_safe=True)
+def render_markdown(value):
+    """Render markdown text to sanitized HTML."""
+    if not value:
+        return ''
+    html = markdown.markdown(
+        value,
+        extensions=['fenced_code', 'tables', 'nl2br', 'sane_lists'],
+    )
+    clean = bleach.clean(html, tags=_MD_ALLOWED_TAGS, attributes=_MD_ALLOWED_ATTRS, strip=True)
+    return mark_safe(clean)
 
 
 AVATAR_GRADIENTS = [

@@ -6,6 +6,14 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import Post, Comment, UserProfile
 
 
+class MarkdownTextarea(forms.Textarea):
+    """Textarea that never renders the HTML required attribute.
+    EasyMDE hides this element; a hidden required field blocks form submission
+    in Chrome with 'invalid form control is not focusable'."""
+    def use_required_attribute(self, initial_value):
+        return False
+
+
 class MultipleFileInput(forms.FileInput):
     allow_multiple_selected = True
 
@@ -52,7 +60,7 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = ['content']
         widgets = {
-            'content': forms.Textarea(attrs={
+            'content': MarkdownTextarea(attrs={
                 'rows': 5,
                 'placeholder': 'Share your anonymous feedback...',
                 'class': 'form-control',

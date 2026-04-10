@@ -3,6 +3,46 @@
 {% block title %}New Feedback — Strativ Voice{% endblock %}
 {% block page_title %}Post Feedback{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<style>
+.EasyMDEContainer .CodeMirror {
+    border: 1px solid var(--border);
+    border-radius: 0 0 10px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    line-height: 1.7;
+    padding: 10px 4px;
+    background: #fff;
+    color: var(--t1);
+    min-height: 160px;
+}
+.EasyMDEContainer .editor-toolbar {
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background: var(--bg);
+    opacity: 1;
+}
+.EasyMDEContainer .editor-toolbar button {
+    color: var(--t2) !important;
+    border-radius: 6px;
+}
+.EasyMDEContainer .editor-toolbar button:hover,
+.EasyMDEContainer .editor-toolbar button.active {
+    background: var(--violet-light) !important;
+    color: var(--violet) !important;
+    border-color: transparent !important;
+}
+.EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border); }
+.EasyMDEContainer .CodeMirror-focused { box-shadow: 0 0 0 3px var(--violet-glow); }
+.editor-preview, .editor-preview-side {
+    background: #fff; font-family: 'Inter', sans-serif;
+    font-size: .9rem; line-height: 1.7; color: var(--t1);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -24,7 +64,12 @@
                     {% csrf_token %}
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold" style="color:var(--t1);">Your Feedback</label>
+                        <label class="form-label fw-semibold d-flex align-items-center gap-2" style="color:var(--t1);">
+                            Your Feedback
+                            <span class="fw-normal small" style="color:var(--t3);">
+                                <i class="bi bi-markdown me-1"></i>Markdown supported
+                            </span>
+                        </label>
                         {{ form.content }}
                         {% if form.content.errors %}
                         <div class="text-danger small mt-1">
@@ -33,7 +78,7 @@
                         {% endif %}
                         <div class="form-text mt-2" style="color:var(--t3);">
                             <i class="bi bi-lightbulb me-1" style="color:var(--s-amber);"></i>
-                            Share suggestions, ideas, or concerns. Be constructive and respectful.
+                            Share suggestions, ideas, or concerns. Use the toolbar above to format your text.
                         </div>
                     </div>
 
@@ -75,8 +120,42 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
-document.querySelector('form').addEventListener('submit', function () {
+const easyMDE = new EasyMDE({
+    element: document.getElementById('id_content'),
+    placeholder: 'Share your anonymous feedback…\n\nTip: use **bold**, *italic*, `code`, > quotes, - lists…',
+    spellChecker: false,
+    status: false,
+    autofocus: false,
+    toolbar: [
+        'bold', 'italic', 'strikethrough', '|',
+        'heading-2', 'heading-3', '|',
+        'unordered-list', 'ordered-list', '|',
+        'code', 'quote', '|',
+        'preview', 'side-by-side', 'fullscreen',
+    ],
+    minHeight: '160px',
+    renderingConfig: { singleLineBreaks: false },
+});
+
+document.querySelector('form').addEventListener('submit', function (e) {
+    // Sync EasyMDE content back into the hidden textarea so Django receives it
+    easyMDE.codemirror.save();
+
+    if (!easyMDE.value().trim()) {
+        e.preventDefault();
+        let err = document.getElementById('content-error');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'content-error';
+            err.className = 'text-danger small mt-1';
+            err.textContent = 'Please enter your feedback.';
+            document.querySelector('.EasyMDEContainer').after(err);
+        }
+        return;
+    }
+
     const btn = document.getElementById('submit-feedback-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Submitting…';

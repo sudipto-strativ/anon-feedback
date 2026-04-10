@@ -42,7 +42,7 @@
     <!-- Body -->
     <div class="fb-card-body">
         <a href="{% url 'post_detail' post.id %}" class="text-decoration-none">
-            <p class="fb-text {% if truncate != False %}truncated{% endif %}">{{ post.content }}</p>
+            <div class="md-content {% if truncate != False %}truncated{% endif %}">{{ post.content|render_markdown }}</div>
         </a>
         {% with attachments=post.attachments.all %}
         {% if attachments %}
