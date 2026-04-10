@@ -6,44 +6,43 @@
 
 {% block content %}
 <div class="page-header">
-    <h1><i class="bi bi-table me-2" style="color:#6366f1;"></i>All Feedback</h1>
+    <h1><i class="bi bi-table me-2" style="color:var(--violet);"></i>All Feedback</h1>
 </div>
 
-<!-- Search / filter bar -->
-<div class="card border-0 shadow-sm mb-4">
+<!-- Search / filter -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius:var(--radius)!important; border:1px solid var(--border)!important;">
     <div class="card-body py-3 px-4">
         <form method="get" class="row g-2 align-items-end">
             <div class="col-md-6">
-                <label class="form-label small fw-semibold text-muted mb-1">Search</label>
+                <label class="form-label small fw-semibold mb-1" style="color:var(--t2);">Search</label>
                 <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search" style="color:#6366f1;"></i>
+                    <span class="input-group-text bg-white" style="border-color:var(--border); border-right:none;">
+                        <i class="bi bi-search" style="color:var(--violet);"></i>
                     </span>
                     <input type="text" name="q" value="{{ search_query }}"
-                           class="form-control border-start-0 ps-0"
-                           placeholder="Search feedback content...">
+                           class="form-control ps-2"
+                           style="border-left:none; border-color:var(--border);"
+                           placeholder="Search feedback content…">
                 </div>
             </div>
             <div class="col-md-3">
-                <label class="form-label small fw-semibold text-muted mb-1">Status</label>
-                <select name="status" class="form-select">
+                <label class="form-label small fw-semibold mb-1" style="color:var(--t2);">Status</label>
+                <select name="status" class="form-select" style="border-color:var(--border);">
                     <option value="">All Statuses</option>
                     {% for value, label in STATUS_CHOICES %}
-                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-3">
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn flex-fill fw-semibold text-white"
-                            style="background:linear-gradient(135deg,#6366f1,#818cf8); border:none; border-radius:8px;">
+                            style="background:linear-gradient(135deg,var(--violet),#a855f7);border:none;border-radius:8px;">
                         <i class="bi bi-funnel-fill me-1"></i> Filter
                     </button>
                     {% if search_query or status_filter %}
-                    <a href="{% url 'list_view' %}" class="btn btn-outline-secondary" title="Clear filters">
-                        <i class="bi bi-x-lg"></i>
+                    <a href="{% url 'list_view' %}" class="btn" style="border:1px solid var(--border); border-radius:8px;" title="Clear filters">
+                        <i class="bi bi-x-lg" style="color:var(--t2);"></i>
                     </a>
                     {% endif %}
                 </div>
@@ -53,7 +52,7 @@
 </div>
 
 {% if search_query or status_filter %}
-<p class="small text-muted mb-3">
+<p class="small mb-3" style="color:var(--t2);">
     Showing <strong>{{ page_obj.paginator.count }}</strong> result{{ page_obj.paginator.count|pluralize }}
     {% if search_query %} for "<strong>{{ search_query }}</strong>"{% endif %}
     {% if status_filter %} · status: <strong>{{ status_filter }}</strong>{% endif %}
@@ -61,24 +60,31 @@
 {% endif %}
 
 {% if page_obj %}
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm" style="border-radius:var(--radius)!important; border:1px solid var(--border)!important; overflow:hidden;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
-                <tr style="background: linear-gradient(90deg,#f8f9ff,#f1f3ff); border-bottom: 2px solid #e8eaf0;">
-                    <th class="ps-4 py-3 fw-700" style="color:#374151;">Feedback</th>
-                    <th class="py-3" style="color:#374151;">Status</th>
-                    <th class="py-3" style="color:#374151;">Score</th>
-                    <th class="py-3" style="color:#374151;"><i class="bi bi-chat-dots-fill" style="color:#6366f1;"></i></th>
-                    <th class="py-3" style="color:#374151;">Date</th>
+                <tr style="background:var(--bg); border-bottom:2px solid var(--border);">
+                    <th class="ps-4 py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Feedback</th>
+                    <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Status</th>
+                    <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Score</th>
+                    <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">
+                        <i class="bi bi-chat-dots-fill" style="color:var(--violet);"></i>
+                    </th>
+                    <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Date</th>
                 </tr>
             </thead>
             <tbody>
                 {% for post in page_obj %}
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td class="ps-4 py-3" style="max-width: 420px;">
+                <tr style="border-bottom:1px solid var(--border-soft); transition:background .12s;">
+                    <td class="ps-4 py-3" style="max-width:420px;">
+                        <!-- Status accent dot -->
+                        <span class="d-inline-block me-2" style="
+                            width:6px; height:6px; border-radius:50%; flex-shrink:0; vertical-align:middle;
+                            background:{% if post.status == 'pending' %}var(--s-amber){% elif post.status == 'in_progress' %}var(--s-violet){% elif post.status == 'done' %}var(--s-emerald){% else %}var(--s-red){% endif %};
+                        "></span>
                         <a href="{% url 'post_detail' post.id %}" class="text-decoration-none fw-500"
-                           style="color:#1e2029;" title="{{ post.content }}">
+                           style="color:var(--t1);" title="{{ post.content }}">
                             {{ post.content|truncate_chars:80 }}
                         </a>
                     </td>
@@ -95,7 +101,8 @@
                         {% endif %}
                     </td>
                     <td class="py-3">
-                        <span class="fw-bold {% if post.score > 0 %}text-success{% elif post.score < 0 %}text-danger{% else %}text-muted{% endif %}">
+                        <span class="fw-bold"
+                              style="color:{% if post.score > 0 %}var(--s-emerald){% elif post.score < 0 %}var(--s-red){% else %}var(--t3){% endif %}">
                             {{ post.score }}
                         </span>
                     </td>
@@ -122,7 +129,6 @@
             </a>
         </li>
         {% endif %}
-
         {% for num in page_obj.paginator.page_range %}
             {% if page_obj.number == num %}
             <li class="page-item active"><span class="page-link">{{ num }}</span></li>
@@ -132,7 +138,6 @@
             </li>
             {% endif %}
         {% endfor %}
-
         {% if page_obj.has_next %}
         <li class="page-item">
             <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
@@ -147,9 +152,10 @@
 {% else %}
 <div class="text-center py-5">
     <div style="font-size:3rem;">📭</div>
-    <p class="text-muted mt-3">
+    <p style="color:var(--t2);" class="mt-3">
         {% if search_query or status_filter %}
-            No feedback matched your filters. <a href="{% url 'list_view' %}" style="color:#6366f1;">Clear filters</a>
+            No feedback matched your filters.
+            <a href="{% url 'list_view' %}" style="color:var(--violet);">Clear filters</a>
         {% else %}
             No feedback posted yet.
         {% endif %}

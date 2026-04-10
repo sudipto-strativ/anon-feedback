@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import UserProfile, Post, Comment, Vote, NotificationEmail, SlackConfig
+from .models import UserProfile, Post, Comment, Vote, NotificationEmail, SlackConfig, PostAttachment, CommentImage
 
 
 class UserProfileInline(admin.StackedInline):
@@ -54,3 +54,18 @@ class NotificationEmailAdmin(admin.ModelAdmin):
 class SlackConfigAdmin(admin.ModelAdmin):
     list_display = ('channel_name', 'webhook_url', 'is_active')
     list_filter = ('is_active',)
+
+
+@admin.register(PostAttachment)
+class PostAttachmentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'post', 'filename', 'uploaded_at')
+    readonly_fields = ('uploaded_at',)
+
+    def filename(self, obj):
+        return obj.filename
+
+
+@admin.register(CommentImage)
+class CommentImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'comment', 'uploaded_at')
+    readonly_fields = ('uploaded_at',)

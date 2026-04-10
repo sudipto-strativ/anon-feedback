@@ -3,65 +3,190 @@
 {% block title %}New Feedback — Strativ Voice{% endblock %}
 {% block page_title %}Post Feedback{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-plus-circle-fill me-2" style="color:var(--pink);"></i>Share Feedback</h1>
-</div>
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<style>
+.EasyMDEContainer .CodeMirror {
+    border: 1px solid var(--border);
+    border-radius: 0 0 10px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    line-height: 1.7;
+    padding: 10px 4px;
+    background: #fff;
+    color: var(--t1);
+    min-height: 160px;
+}
+.EasyMDEContainer .editor-toolbar {
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background: var(--bg);
+    opacity: 1;
+}
+.EasyMDEContainer .editor-toolbar button {
+    color: var(--t2) !important;
+    border-radius: 6px;
+}
+.EasyMDEContainer .editor-toolbar button:hover,
+.EasyMDEContainer .editor-toolbar button.active {
+    background: var(--violet-light) !important;
+    color: var(--violet) !important;
+    border-color: transparent !important;
+}
+.EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border); }
+.EasyMDEContainer .CodeMirror-focused { box-shadow: 0 0 0 3px var(--violet-glow); }
+.editor-preview, .editor-preview-side {
+    background: #fff; font-family: 'Inter', sans-serif;
+    font-size: .9rem; line-height: 1.7; color: var(--t1);
+}
+</style>
+{% endblock %}
 
+{% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
+
         <!-- Anonymity notice -->
         <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-4"
-             style="background:linear-gradient(135deg,#ede9fe,#e0f2fe); border: 1px solid #ddd6fe;">
-            <div style="font-size:1.4rem;">🔒</div>
+             style="background:linear-gradient(135deg,var(--violet-light),#e0f2fe); border:1px solid #ddd6fe;">
+            <div style="font-size:1.3rem; flex-shrink:0;">🔒</div>
             <div>
                 <div class="fw-semibold small" style="color:#4c1d95;">Your identity is protected</div>
                 <div class="small" style="color:#5b21b6;">Your feedback is posted anonymously — your name is never shown publicly.</div>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
-            <div style="height:4px;background:linear-gradient(90deg,#e91e63,#6366f1,#06b6d4);"></div>
-
-            <div class="card-body p-4">
-                <form method="post">
+        <div class="fb-card" style="border-radius:var(--radius);">
+            <div class="fb-card-status-bar" style="background:linear-gradient(to bottom, var(--violet), var(--rose));"></div>
+            <div class="p-4" style="padding-left:24px!important;">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
+
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Your Feedback</label>
+                        <label class="form-label fw-semibold d-flex align-items-center gap-2" style="color:var(--t1);">
+                            Your Feedback
+                            <span class="fw-normal small" style="color:var(--t3);">
+                                <i class="bi bi-markdown me-1"></i>Markdown supported
+                            </span>
+                        </label>
                         {{ form.content }}
                         {% if form.content.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in form.content.errors %}{{ error }}{% endfor %}
                         </div>
                         {% endif %}
-                        <div class="form-text mt-2">
-                            <i class="bi bi-lightbulb me-1" style="color:#f59e0b;"></i>
-                            Share suggestions, ideas, or concerns. Be constructive and respectful.
+                        <div class="form-text mt-2" style="color:var(--t3);">
+                            <i class="bi bi-lightbulb me-1" style="color:var(--s-amber);"></i>
+                            Share suggestions, ideas, or concerns. Use the toolbar above to format your text.
                         </div>
                     </div>
 
+                    <!-- Attachments -->
+                    <div class="mb-4 p-3 rounded-3" style="background:var(--bg); border:1px solid var(--border);">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" style="color:var(--t1);">
+                            <i class="bi bi-paperclip" style="color:var(--violet);"></i>
+                            Attachments <span class="fw-normal small" style="color:var(--t3);">(optional)</span>
+                        </label>
+                        {{ form.attachments }}
+                        {% if form.attachments.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.attachments.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text mt-1" style="color:var(--t3);">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Images, PDF, Word, Excel/CSV — up to 10 MB per file. Multiple files allowed.
+                        </div>
+                        <div id="attachment-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="{% url 'feed' %}" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+                        <a href="{% url 'feed' %}" class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                           style="border-color:var(--border); color:var(--t2); border-radius:8px;">
                             <i class="bi bi-arrow-left"></i> Cancel
                         </a>
                         <button type="submit" id="submit-feedback-btn" class="btn px-5 fw-semibold text-white"
-                                style="background:linear-gradient(135deg,#e91e63,#ff6090);border:none;border-radius:8px;box-shadow:0 4px 14px rgba(233,30,99,.3);">
+                                style="background:linear-gradient(135deg,var(--rose),#fb7185);border:none;border-radius:8px;box-shadow:0 4px 14px var(--rose-glow);">
                             <i class="bi bi-send-fill me-2"></i>Submit Feedback
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
-document.querySelector('form').addEventListener('submit', function () {
+const easyMDE = new EasyMDE({
+    element: document.getElementById('id_content'),
+    placeholder: 'Share your anonymous feedback…\n\nTip: use **bold**, *italic*, `code`, > quotes, - lists…',
+    spellChecker: false,
+    status: false,
+    autofocus: false,
+    toolbar: [
+        'bold', 'italic', 'strikethrough', '|',
+        'heading-2', 'heading-3', '|',
+        'unordered-list', 'ordered-list', '|',
+        'code', 'quote', '|',
+        'preview', 'side-by-side', 'fullscreen',
+    ],
+    minHeight: '160px',
+    renderingConfig: { singleLineBreaks: false },
+});
+
+document.querySelector('form').addEventListener('submit', function (e) {
+    // Sync EasyMDE content back into the hidden textarea so Django receives it
+    easyMDE.codemirror.save();
+
+    if (!easyMDE.value().trim()) {
+        e.preventDefault();
+        let err = document.getElementById('content-error');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'content-error';
+            err.className = 'text-danger small mt-1';
+            err.textContent = 'Please enter your feedback.';
+            document.querySelector('.EasyMDEContainer').after(err);
+        }
+        return;
+    }
+
     const btn = document.getElementById('submit-feedback-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Submitting…';
+});
+
+document.querySelector('input[name="attachments"]').addEventListener('change', function () {
+    const preview = document.getElementById('attachment-preview');
+    preview.innerHTML = '';
+    Array.from(this.files).forEach(file => {
+        const isImage = file.type.startsWith('image/');
+        const chip = document.createElement('div');
+        chip.className = 'd-flex align-items-center gap-1 px-2 py-1 rounded-2 small';
+        chip.style.cssText = 'background:#fff; border:1px solid var(--border); max-width:180px;';
+        if (isImage) {
+            const img = document.createElement('img');
+            img.style.cssText = 'width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0;';
+            img.src = URL.createObjectURL(file);
+            chip.appendChild(img);
+        } else {
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-file-earmark-fill flex-shrink-0';
+            icon.style.color = 'var(--violet)';
+            chip.appendChild(icon);
+        }
+        const name = document.createElement('span');
+        name.className = 'text-truncate';
+        name.style.color = 'var(--t1)';
+        name.textContent = file.name;
+        chip.appendChild(name);
+        preview.appendChild(chip);
+    });
 });
 </script>
 {% endblock %}

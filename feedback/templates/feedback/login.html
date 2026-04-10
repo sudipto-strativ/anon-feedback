@@ -2,14 +2,54 @@
 
 {% block title %}Login — Strativ Voice{% endblock %}
 
+{% block extra_head %}
+<style>
+.auth-bg {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px;
+    background:
+        radial-gradient(at 20% 10%, rgba(124,58,237,.45) 0px, transparent 55%),
+        radial-gradient(at 85% 5%,  rgba(244,63,94,.28) 0px, transparent 50%),
+        radial-gradient(at 0%  60%, rgba(107,33,168,.35) 0px, transparent 55%),
+        radial-gradient(at 90% 80%, rgba(59,130,246,.2)  0px, transparent 50%),
+        #0a0917;
+}
+
+.auth-card {
+    background: rgba(255,255,255,.97);
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.25);
+    overflow: hidden;
+}
+
+.auth-card-top {
+    height: 4px;
+    background: linear-gradient(90deg, #7c3aed, #f43f5e);
+}
+
+.auth-input-group .input-group-text {
+    background: #f3f0ff;
+    border-color: #e8e4ff;
+    border-right: none;
+}
+
+.auth-input-group .form-control {
+    border-left: none;
+    border-color: #e8e4ff;
+}
+
+.auth-input-group .form-control:focus {
+    border-left: none;
+    border-color: var(--violet) !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
+}
+</style>
+{% endblock %}
+
 {% block unauth_content %}
-<div class="min-vh-100 d-flex align-items-center justify-content-center py-5"
-     style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 55%, #24243e 100%);">
-
-    <!-- Decorative blobs -->
-    <div style="position:fixed;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:rgba(233,30,99,.15);filter:blur(60px);pointer-events:none;"></div>
-    <div style="position:fixed;bottom:-60px;left:-60px;width:260px;height:260px;border-radius:50%;background:rgba(99,102,241,.15);filter:blur(50px);pointer-events:none;"></div>
-
+<div class="auth-bg">
     <div class="container" style="position:relative;z-index:1;">
         <div class="row justify-content-center">
             <div class="col-sm-10 col-md-6 col-lg-4">
@@ -17,21 +57,22 @@
                 <!-- Brand -->
                 <div class="text-center mb-4">
                     <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-                         style="width:58px;height:58px;background:linear-gradient(135deg,#e91e63,#ff6090);box-shadow:0 6px 20px rgba(233,30,99,.45);">
-                        <span style="font-size:1.6rem;font-weight:900;color:white;">S</span>
+                         style="width:56px;height:56px;background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 8px 24px rgba(124,58,237,.5);">
+                        <i class="bi bi-megaphone-fill text-white" style="font-size:1.4rem;"></i>
                     </div>
-                    <h2 class="text-white fw-800 mb-1" style="font-family:'Inter',sans-serif;">Strativ Voice</h2>
-                    <p class="small" style="color:rgba(255,255,255,.45);">Anonymous Feedback Platform</p>
+                    <h2 class="text-white fw-800 mb-1" style="font-size:1.5rem;">Strativ Voice</h2>
+                    <p class="small" style="color:rgba(255,255,255,.42);">Anonymous Feedback Platform</p>
                 </div>
 
                 <!-- Card -->
-                <div class="card border-0 shadow-lg" style="border-radius:16px;">
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1 text-center">Welcome back</h5>
-                        <p class="text-muted small text-center mb-4">Sign in to your anonymous identity</p>
+                <div class="auth-card">
+                    <div class="auth-card-top"></div>
+                    <div class="p-4">
+                        <h5 class="fw-bold mb-1 text-center" style="color:#111827;">Welcome back</h5>
+                        <p class="text-center small mb-4" style="color:#6b7280;">Sign in to your anonymous identity</p>
 
                         {% if form.errors %}
-                        <div class="alert alert-danger py-2 small d-flex align-items-center gap-2">
+                        <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3">
                             <i class="bi bi-exclamation-circle-fill"></i>
                             Invalid username or password.
                         </div>
@@ -39,7 +80,7 @@
 
                         {% if messages %}
                         {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:'info' }} py-2 small">{{ message }}</div>
+                        <div class="alert alert-{{ message.tags|default:'info' }} py-2 small mb-3">{{ message }}</div>
                         {% endfor %}
                         {% endif %}
 
@@ -48,46 +89,46 @@
                             <input type="hidden" name="next" value="{{ next }}">
 
                             <div class="mb-3">
-                                <label for="id_username" class="form-label small fw-semibold">Username</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="bi bi-person" style="color:#6366f1;"></i>
+                                <label for="id_username" class="form-label small fw-semibold" style="color:#374151;">Username</label>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person" style="color:#7c3aed;"></i>
                                     </span>
                                     <input type="text" name="username" id="id_username"
-                                           class="form-control border-start-0 ps-0"
+                                           class="form-control"
                                            placeholder="Your username" autofocus required>
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="id_password" class="form-label small fw-semibold">Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="bi bi-lock" style="color:#6366f1;"></i>
+                                <label for="id_password" class="form-label small fw-semibold" style="color:#374151;">Password</label>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock" style="color:#7c3aed;"></i>
                                     </span>
                                     <input type="password" name="password" id="id_password"
-                                           class="form-control border-start-0 ps-0"
+                                           class="form-control"
                                            placeholder="Your password" required>
                                 </div>
                             </div>
 
                             <button type="submit" class="btn w-100 py-2 fw-semibold text-white"
-                                    style="background:linear-gradient(135deg,#e91e63,#ff6090);border:none;border-radius:10px;box-shadow:0 4px 14px rgba(233,30,99,.35);">
+                                    style="background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:10px;box-shadow:0 4px 16px rgba(124,58,237,.4);">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
                             </button>
                         </form>
 
-                        <hr class="my-4">
-
-                        <p class="text-center text-muted small mb-0">
+                        <hr class="my-4" style="border-color:#f0eeff;">
+                        <p class="text-center small mb-0" style="color:#6b7280;">
                             No account?
-                            <a href="{% url 'register' %}" class="fw-semibold text-decoration-none"
-                               style="color:#e91e63;">Create one here</a>
+                            <a href="{% url 'register' %}" class="fw-semibold text-decoration-none" style="color:#7c3aed;">
+                                Create one here
+                            </a>
                         </p>
                     </div>
                 </div>
 
-                <p class="text-center small mt-4" style="color:rgba(255,255,255,.3);">
+                <p class="text-center small mt-4" style="color:rgba(255,255,255,.25);">
                     &copy; {% now "Y" %} Strativ AB
                 </p>
             </div>

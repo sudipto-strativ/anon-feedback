@@ -1,6 +1,9 @@
 from django import template
 from django.utils import timezone
 from django.utils.timesince import timesince
+from django.utils.safestring import mark_safe
+import markdown
+import bleach
 
 register = template.Library()
 
@@ -76,12 +79,44 @@ def score_class(score):
         return 'neutral'
 
 
+_MD_ALLOWED_TAGS = [
+    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'strong', 'em', 'del', 's', 'code', 'pre', 'blockquote',
+    'ul', 'ol', 'li', 'hr', 'br', 'a', 'img',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+]
+_MD_ALLOWED_ATTRS = {
+    'a':   ['href', 'title', 'rel'],
+    'img': ['src', 'alt', 'title'],
+    'code': ['class'],
+    'pre':  ['class'],
+    'th':   ['align'],
+    'td':   ['align'],
+}
+
+
+@register.filter(is_safe=True)
+def render_markdown(value):
+    """Render markdown text to sanitized HTML."""
+    if not value:
+        return ''
+    html = markdown.markdown(
+        value,
+        extensions=['fenced_code', 'tables', 'nl2br', 'sane_lists'],
+    )
+    clean = bleach.clean(html, tags=_MD_ALLOWED_TAGS, attributes=_MD_ALLOWED_ATTRS, strip=True)
+    return mark_safe(clean)
+
+
 AVATAR_GRADIENTS = [
-    'linear-gradient(135deg,#6366f1,#8b5cf6)',
-    'linear-gradient(135deg,#e91e63,#f43f5e)',
-    'linear-gradient(135deg,#0ea5e9,#06b6d4)',
-    'linear-gradient(135deg,#10b981,#14b8a6)',
-    'linear-gradient(135deg,#f59e0b,#f97316)',
+    'linear-gradient(135deg,#7c3aed,#a855f7)',  # violet
+    'linear-gradient(135deg,#f43f5e,#fb7185)',  # rose
+    'linear-gradient(135deg,#0ea5e9,#38bdf8)',  # sky
+    'linear-gradient(135deg,#059669,#34d399)',  # emerald
+    'linear-gradient(135deg,#f59e0b,#fbbf24)',  # amber
+    'linear-gradient(135deg,#ec4899,#f472b6)',  # pink
+    'linear-gradient(135deg,#06b6d4,#67e8f9)',  # cyan
+    'linear-gradient(135deg,#8b5cf6,#c084fc)',  # purple
 ]
 
 @register.filter

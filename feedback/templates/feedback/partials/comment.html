@@ -1,10 +1,9 @@
 {% load feedback_extras %}
 {% with user_vote=comment_vote_map|get_item:comment.id %}
+{% with role=comment.author.profile.role %}
 
-<div class="fb-comment" id="comment-card-{{ comment.id }}">
+<div class="fb-comment">
 
-    <!-- Role-coloured avatar -->
-    {% with role=comment.author.profile.role %}
     <div class="fb-comment-avatar
         {% if role == 'hr' %}fb-comment-avatar-hr
         {% elif role == 'ceo' %}fb-comment-avatar-ceo
@@ -15,8 +14,11 @@
     </div>
 
     <div class="fb-comment-right">
-        <!-- Bubble -->
-        <div class="fb-comment-bubble">
+        <div class="fb-comment-bubble
+            {% if role == 'hr' %}fb-comment-bubble-hr
+            {% elif role == 'ceo' %}fb-comment-bubble-ceo
+            {% else %}fb-comment-bubble-employee{% endif %}">
+
             <div class="fb-comment-meta">
                 {% if role == 'hr' %}
                     <span class="role-badge role-badge-hr"><i class="bi bi-briefcase-fill"></i> HR</span>
@@ -27,10 +29,19 @@
                 {% endif %}
                 <span class="fb-comment-time">{{ comment.created_at|timesince_short }}</span>
             </div>
+
+            {% if comment.content %}
             <p class="fb-comment-text">{{ comment.content }}</p>
+            {% endif %}
+
+            {% for img in comment.images.all %}
+            <a href="{{ img.image.url }}" target="_blank" rel="noopener" class="d-inline-block mt-1">
+                <img src="{{ img.image.url }}" alt="comment image"
+                     style="max-height:180px; max-width:100%; border-radius:8px; object-fit:cover; border:1px solid var(--border); cursor:zoom-in;">
+            </a>
+            {% endfor %}
         </div>
 
-        <!-- Inline reactions -->
         <div class="fb-comment-reactions">
             <button
                 class="fb-comment-react {% if user_vote == 'like' %}active-like{% endif %}"
@@ -59,7 +70,7 @@
             {% endif %}
         </div>
     </div>
-    {% endwith %}
 
 </div>
+{% endwith %}
 {% endwith %}

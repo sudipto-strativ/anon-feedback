@@ -8,35 +8,31 @@
 <div class="row justify-content-center">
 <div class="col-12 col-md-10 col-lg-7 col-xl-6">
 
-    <!-- Back link -->
     <a href="{% url 'feed' %}" class="text-decoration-none small fw-semibold d-inline-flex align-items-center gap-1 mb-3"
-       style="color:#6366f1;">
+       style="color:var(--violet);">
         <i class="bi bi-arrow-left"></i> Back to Feed
     </a>
 
-    <!-- ── POST CARD (fb-style, full text) ────────────────────── -->
-    <div class="fb-card mb-3">
+    <!-- POST CARD -->
+    <div class="fb-card status-{{ post.status }} mb-3">
+        <div class="fb-card-status-bar {{ post.status }}"></div>
 
-        <!-- Status stripe -->
-        <div class="fb-card-stripe {{ post.status }}"></div>
-
-        <!-- Header -->
         <div class="fb-card-header">
             <div class="fb-avatar" style="background: {{ post.id|avatar_gradient }};">
-                <i class="bi bi-incognito" style="font-size:1.1rem;"></i>
+                <i class="bi bi-incognito" style="font-size:1rem;"></i>
             </div>
             <div class="flex-grow-1">
                 <div class="fb-avatar-name">Anonymous</div>
                 <div class="fb-avatar-time d-flex align-items-center gap-2">
                     <span>{{ post.created_at|timesince_short }}</span>
                     <span style="color:#d1d5db;">·</span>
-                    <i class="bi bi-globe2" style="font-size:.7rem; color:#94a3b8;"></i>
+                    <i class="bi bi-globe2" style="font-size:.65rem; color:var(--t3);"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 {% if post.eta %}
                 <span class="post-meta d-flex align-items-center gap-1"
-                      style="background:#f1f5f9; padding:3px 9px; border-radius:8px;">
+                      style="background:var(--bg); border:1px solid var(--border); padding:3px 9px; border-radius:8px;">
                     <i class="bi bi-calendar3"></i> {{ post.eta|date:"M d, Y" }}
                 </span>
                 {% endif %}
@@ -52,14 +48,43 @@
 
         <!-- Full content -->
         <div class="fb-card-body">
-            <p class="fb-text" style="font-size:1rem; line-height:1.7;">{{ post.content }}</p>
+            <div class="md-content" style="font-size:.95rem;">{{ post.content|render_markdown }}</div>
         </div>
 
-        <!-- Remark (visible to all when set) -->
+        <!-- Attachments -->
+        {% with attachments=post.attachments.all %}
+        {% if attachments %}
+        <div class="px-3 pb-3" style="padding-left:20px!important;">
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                {% for att in attachments %}
+                    {% if att.is_image %}
+                    <a href="{{ att.file.url }}" target="_blank" rel="noopener">
+                        <img src="{{ att.file.url }}" alt="{{ att.filename }}"
+                             style="max-height:200px; max-width:100%; border-radius:10px; object-fit:cover; border:1px solid var(--border); cursor:zoom-in;">
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% for att in attachments %}
+                {% if not att.is_image %}
+                <a href="{{ att.file.url }}" target="_blank" rel="noopener"
+                   class="d-inline-flex align-items-center gap-2 px-3 py-2 me-2 mb-1 rounded-2 text-decoration-none small fw-semibold"
+                   style="background:var(--bg); border:1px solid var(--border); color:var(--t1);">
+                    <i class="bi {{ att.icon_class }}" style="color:{{ att.icon_color }}; font-size:1.1rem;"></i>
+                    {{ att.filename }}
+                    <i class="bi bi-download ms-1" style="color:var(--t3); font-size:.75rem;"></i>
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Remark -->
         {% if post.remark %}
-        <div class="mx-0 mb-3 p-3 rounded-3 d-flex gap-3"
+        <div class="mx-3 mb-3 p-3 rounded-3 d-flex gap-3"
              style="background:{% if post.status == 'done' %}#f0fdf4{% else %}#fff5f5{% endif %};
-                    border-left: 4px solid {% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};">
+                    border-left:4px solid {% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};">
             <i class="bi bi-chat-left-quote-fill mt-1 flex-shrink-0"
                style="color:{% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};"></i>
             <div>
@@ -79,63 +104,62 @@
                 {% if post.like_count or post.dislike_count %}
                 <div class="fb-counts-icons">
                     {% if post.like_count %}
-                    <div class="fb-reaction-icon" style="background:#1877f2;">
+                    <div class="fb-reaction-icon" style="background:var(--violet);">
                         <i class="bi bi-hand-thumbs-up-fill" style="color:#fff;"></i>
                     </div>
                     {% endif %}
                     {% if post.dislike_count %}
-                    <div class="fb-reaction-icon" style="background:#ef4444;">
+                    <div class="fb-reaction-icon" style="background:var(--s-red);">
                         <i class="bi bi-hand-thumbs-down-fill" style="color:#fff;"></i>
                     </div>
                     {% endif %}
                 </div>
-                <span id="score-post-{{ post.id }}">{{ post.score }}</span>
                 {% endif %}
             </div>
             {% if post.comment_count %}
-            <span style="color:#65676b;">{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
+            <span style="color:var(--t2);">{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
             {% endif %}
         </div>
-        {% else %}
-        <!-- Hidden score element for JS when there are no votes yet -->
-        <span id="score-post-{{ post.id }}" class="d-none">{{ post.score }}</span>
         {% endif %}
 
-        <!-- Divider -->
         <div class="fb-divider"></div>
 
         <!-- Action bar -->
         <div class="fb-actions">
-            <button
-                class="fb-action-btn {% if user_post_vote == 'like' %}active-like{% endif %}"
-                id="like-btn-post-{{ post.id }}"
-                onclick="votePost({{ post.id }}, 'like')"
-            >
-                <i class="bi bi-hand-thumbs-up{% if user_post_vote == 'like' %}-fill{% endif %}"></i>
-                Upvote
-            </button>
+            <div class="vote-cluster">
+                <button
+                    class="vcluster-btn {% if user_post_vote == 'like' %}active-like{% endif %}"
+                    id="like-btn-post-{{ post.id }}"
+                    onclick="votePost({{ post.id }}, 'like')"
+                    title="Upvote"
+                >
+                    <i class="bi bi-hand-thumbs-up{% if user_post_vote == 'like' %}-fill{% endif %}"></i>
+                </button>
+                <span class="vcluster-score {% if post.score > 0 %}positive{% elif post.score < 0 %}negative{% endif %}"
+                      id="score-post-{{ post.id }}">{{ post.score }}</span>
+                <button
+                    class="vcluster-btn {% if user_post_vote == 'dislike' %}active-dislike{% endif %}"
+                    id="dislike-btn-post-{{ post.id }}"
+                    onclick="votePost({{ post.id }}, 'dislike')"
+                    title="Downvote"
+                >
+                    <i class="bi bi-hand-thumbs-down{% if user_post_vote == 'dislike' %}-fill{% endif %}"></i>
+                </button>
+            </div>
+
             <div class="fb-action-divider"></div>
-            <button
-                class="fb-action-btn {% if user_post_vote == 'dislike' %}active-dislike{% endif %}"
-                id="dislike-btn-post-{{ post.id }}"
-                onclick="votePost({{ post.id }}, 'dislike')"
-            >
-                <i class="bi bi-hand-thumbs-down{% if user_post_vote == 'dislike' %}-fill{% endif %}"></i>
-                Downvote
-            </button>
-            <div class="fb-action-divider"></div>
+
             <button class="fb-action-btn" onclick="document.getElementById('comment-input').focus()">
-                <i class="bi bi-chat-dots"></i>
-                Comment
+                <i class="bi bi-chat-dots"></i> Comment
             </button>
         </div>
 
         <!-- Status update form (CEO/HR only) -->
         {% if can_update_status %}
         <div class="mx-3 mb-3 mt-1 p-3 rounded-3"
-             style="background:linear-gradient(135deg,#f8faff,#f0f4ff); border:1px solid #dde3f5;">
+             style="background:linear-gradient(135deg,var(--bg),var(--violet-light)); border:1px solid var(--border);">
             <div class="d-flex align-items-center gap-2 mb-3">
-                <i class="bi bi-pencil-square" style="color:#6366f1;"></i>
+                <i class="bi bi-pencil-square" style="color:var(--violet);"></i>
                 <span class="fw-bold small" style="color:#4c1d95;">Update Status</span>
                 <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% else %}role-badge-ceo{% endif %}">
                     {{ request.user.profile.role_display }}
@@ -145,19 +169,19 @@
                 {% csrf_token %}
                 <div class="row g-2 mb-2">
                     <div class="col-sm-6">
-                        <label class="form-label small fw-semibold mb-1">Status</label>
+                        <label class="form-label small fw-semibold mb-1" style="color:var(--t1);">Status</label>
                         {{ status_form.status }}
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label small fw-semibold mb-1">ETA</label>
+                        <label class="form-label small fw-semibold mb-1" style="color:var(--t1);">ETA</label>
                         {{ status_form.eta }}
                     </div>
                 </div>
                 <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">
+                    <label class="form-label small fw-semibold mb-1" style="color:var(--t1);">
                         Remark
-                        <span class="text-danger" id="remark-required-indicator" style="display:none;">*</span>
-                        <span class="text-muted fw-normal">(required for Done / Rejected)</span>
+                        <span style="color:var(--s-red);" id="remark-required-indicator" style="display:none;">*</span>
+                        <span class="fw-normal" style="color:var(--t3);">(required for Done / Rejected)</span>
                     </label>
                     {{ status_form.remark }}
                     {% if status_form.remark.errors %}
@@ -168,7 +192,7 @@
                 </div>
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn fw-semibold text-white px-4"
-                            style="background:linear-gradient(135deg,#6366f1,#818cf8);border:none;border-radius:8px;">
+                            style="background:linear-gradient(135deg,var(--violet),#a855f7);border:none;border-radius:8px;box-shadow:0 3px 10px rgba(124,58,237,.3);">
                         <i class="bi bi-check-lg me-1"></i>Save
                     </button>
                 </div>
@@ -178,18 +202,19 @@
 
     </div>
 
-    <!-- ── COMMENTS CARD ───────────────────────────────────────── -->
+    <!-- COMMENTS CARD -->
     <div class="fb-card">
-        <div class="p-3 pb-0">
-            <span class="fw-bold" style="color:#1e2029; font-size:.95rem;">
+        <div class="fb-card-status-bar" style="background:linear-gradient(to bottom, var(--violet), #a855f7);"></div>
+        <div class="p-3 pb-0" style="padding-left:20px!important;">
+            <span class="fw-bold" style="color:var(--t1); font-size:.95rem;">
                 Comments
                 {% if post.comment_count %}
-                <span style="color:#94a3b8; font-weight:400; font-size:.85rem;">· {{ post.comment_count }}</span>
+                <span style="color:var(--t3); font-weight:400; font-size:.85rem;">· {{ post.comment_count }}</span>
                 {% endif %}
             </span>
         </div>
 
-        <div class="p-3">
+        <div class="p-3" style="padding-left:20px!important;">
 
             {% if comments %}
                 {% for comment in comments %}
@@ -198,23 +223,23 @@
             {% else %}
                 <div class="text-center py-4">
                     <div style="font-size:2.2rem;">💭</div>
-                    <p class="text-muted small mt-2 mb-0">No comments yet — start the conversation!</p>
+                    <p class="small mt-2 mb-0" style="color:var(--t2);">No comments yet — start the conversation!</p>
                 </div>
             {% endif %}
 
-            <!-- Comment compose row -->
-            <div class="d-flex gap-2 align-items-start mt-3 pt-3 border-top">
-                <div class="compose-avatar flex-shrink-0" style="width:36px;height:36px;font-size:.8rem;">
+            <!-- Comment compose -->
+            <div class="d-flex gap-2 align-items-start mt-3 pt-3" style="border-top:1px solid var(--border-soft);">
+                <div class="compose-avatar flex-shrink-0" style="width:34px;height:34px;font-size:.78rem;">
                     {{ request.user.username|slice:":1"|upper }}
                 </div>
-                <form method="post" class="flex-grow-1">
+                <form method="post" enctype="multipart/form-data" class="flex-grow-1">
                     {% csrf_token %}
                     <div class="fb-comment-input-wrap">
                         <textarea
                             id="comment-input"
                             name="content"
                             class="fb-comment-input"
-                            placeholder="Write a comment…"
+                            placeholder="Write a comment… (or attach an image)"
                             rows="1"
                             oninput="autoResize(this)"
                         ></textarea>
@@ -223,10 +248,29 @@
                             {% for error in comment_form.content.errors %}{{ error }}{% endfor %}
                         </div>
                         {% endif %}
+                        {% if comment_form.non_field_errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in comment_form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <!-- Image attachment -->
+                    <div class="mt-2">
+                        <label class="d-flex align-items-center gap-1 small mb-1" style="color:var(--t3); cursor:pointer;">
+                            <i class="bi bi-image" style="color:var(--violet);"></i>
+                            Attach image <span class="fw-normal">(optional, max 5 MB)</span>
+                        </label>
+                        {{ comment_form.image }}
+                        {% if comment_form.image.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in comment_form.image.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div id="comment-image-preview" class="mt-2"></div>
                     </div>
                     <div class="d-flex justify-content-end mt-2">
                         <button type="submit" id="comment-submit-btn" class="btn btn-sm fw-semibold text-white px-4"
-                                style="background:linear-gradient(135deg,#e91e63,#ff6090);border:none;border-radius:20px;box-shadow:0 3px 8px rgba(233,30,99,.25);">
+                                style="background:linear-gradient(135deg,var(--rose),#fb7185);border:none;border-radius:20px;box-shadow:0 3px 8px var(--rose-glow);">
                             <i class="bi bi-send-fill me-1"></i>Post
                         </button>
                     </div>
@@ -247,7 +291,6 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-// Show/hide remark required indicator based on selected status
 const statusSelect = document.getElementById('id_status');
 const remarkIndicator = document.getElementById('remark-required-indicator');
 if (statusSelect && remarkIndicator) {
@@ -259,10 +302,30 @@ if (statusSelect && remarkIndicator) {
     updateRemarkIndicator();
 }
 
-document.querySelector('form[method="post"]:not([action])').addEventListener('submit', function () {
-    const btn = document.getElementById('comment-submit-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Posting…';
-});
+const commentForm = document.querySelector('form[enctype="multipart/form-data"]');
+if (commentForm) {
+    commentForm.addEventListener('submit', function () {
+        const btn = document.getElementById('comment-submit-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Posting…';
+        }
+    });
+}
+
+const commentImageInput = document.querySelector('input[name="image"]');
+if (commentImageInput) {
+    commentImageInput.addEventListener('change', function () {
+        const preview = document.getElementById('comment-image-preview');
+        if (!preview) return;
+        preview.innerHTML = '';
+        if (this.files && this.files[0]) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(this.files[0]);
+            img.style.cssText = 'max-height:120px; max-width:100%; border-radius:8px; border:1px solid var(--border);';
+            preview.appendChild(img);
+        }
+    });
+}
 </script>
 {% endblock %}

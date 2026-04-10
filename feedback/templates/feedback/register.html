@@ -2,35 +2,75 @@
 
 {% block title %}Register — Strativ Voice{% endblock %}
 
+{% block extra_head %}
+<style>
+.auth-bg {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px;
+    background:
+        radial-gradient(at 80% 10%, rgba(124,58,237,.45) 0px, transparent 55%),
+        radial-gradient(at 10% 5%,  rgba(244,63,94,.28) 0px, transparent 50%),
+        radial-gradient(at 95% 60%, rgba(107,33,168,.35) 0px, transparent 55%),
+        radial-gradient(at 5%  80%, rgba(59,130,246,.2)  0px, transparent 50%),
+        #0a0917;
+}
+
+.auth-card {
+    background: rgba(255,255,255,.97);
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.25);
+    overflow: hidden;
+}
+
+.auth-card-top {
+    height: 4px;
+    background: linear-gradient(90deg, #f43f5e, #7c3aed);
+}
+
+.auth-input-group .input-group-text {
+    background: #f3f0ff;
+    border-color: #e8e4ff;
+    border-right: none;
+}
+
+.auth-input-group .form-control {
+    border-left: none;
+    border-color: #e8e4ff;
+}
+
+.auth-input-group .form-control:focus {
+    border-left: none;
+    border-color: var(--violet) !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
+}
+</style>
+{% endblock %}
+
 {% block unauth_content %}
-<div class="min-vh-100 d-flex align-items-center justify-content-center py-5"
-     style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 55%, #24243e 100%);">
-
-    <div style="position:fixed;top:-80px;left:-80px;width:320px;height:320px;border-radius:50%;background:rgba(99,102,241,.15);filter:blur(60px);pointer-events:none;"></div>
-    <div style="position:fixed;bottom:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:rgba(233,30,99,.15);filter:blur(50px);pointer-events:none;"></div>
-
+<div class="auth-bg">
     <div class="container" style="position:relative;z-index:1;">
         <div class="row justify-content-center">
             <div class="col-sm-10 col-md-6 col-lg-4">
 
-                <!-- Brand header -->
                 <div class="text-center mb-4">
                     <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-                         style="width:58px;height:58px;background:linear-gradient(135deg,#e91e63,#ff6090);box-shadow:0 6px 20px rgba(233,30,99,.45);">
-                        <span style="font-size:1.6rem;font-weight:900;color:white;">S</span>
+                         style="width:56px;height:56px;background:linear-gradient(135deg,#f43f5e,#fb7185);box-shadow:0 8px 24px rgba(244,63,94,.45);">
+                        <i class="bi bi-megaphone-fill text-white" style="font-size:1.4rem;"></i>
                     </div>
-                    <h2 class="text-white fw-bold mb-1" style="font-family:'Inter',sans-serif;">Strativ Voice</h2>
-                    <p class="small" style="color:rgba(255,255,255,.45);">Create your anonymous identity</p>
+                    <h2 class="text-white fw-bold mb-1" style="font-size:1.5rem;">Strativ Voice</h2>
+                    <p class="small" style="color:rgba(255,255,255,.42);">Create your anonymous identity</p>
                 </div>
 
-                <!-- Register card -->
-                <div class="card border-0 shadow-lg" style="border-radius: 16px;">
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1 text-center">Create Account</h5>
-                        <p class="text-muted small text-center mb-4">Choose a username that keeps you anonymous.</p>
+                <div class="auth-card">
+                    <div class="auth-card-top"></div>
+                    <div class="p-4">
+                        <h5 class="fw-bold mb-1 text-center" style="color:#111827;">Create Account</h5>
+                        <p class="text-center small mb-4" style="color:#6b7280;">Choose a username that keeps you anonymous.</p>
 
                         {% if form.errors %}
-                        <div class="alert alert-danger py-2 small">
+                        <div class="alert alert-danger py-2 small mb-3">
                             <i class="bi bi-exclamation-circle me-1"></i>
                             Please correct the errors below.
                         </div>
@@ -40,98 +80,79 @@
                             {% csrf_token %}
 
                             <div class="mb-3">
-                                <label for="id_username" class="form-label small fw-semibold">
-                                    Username
-                                    <span class="text-muted fw-normal">(this is your public identity)</span>
+                                <label for="id_username" class="form-label small fw-semibold" style="color:#374151;">
+                                    Username <span class="fw-normal" style="color:#9ca3af;">(your public identity)</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="bi bi-at text-muted"></i>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-at" style="color:#7c3aed;"></i>
                                     </span>
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        id="id_username"
-                                        class="form-control border-start-0 ps-0 {% if form.username.errors %}is-invalid{% endif %}"
-                                        placeholder="e.g. anonymous_duck"
-                                        value="{{ form.username.value|default:'' }}"
-                                        autofocus
-                                        required
-                                    >
+                                    <input type="text" name="username" id="id_username"
+                                           class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                           placeholder="e.g. anonymous_duck"
+                                           value="{{ form.username.value|default:'' }}"
+                                           autofocus required>
                                 </div>
                                 {% if form.username.errors %}
-                                <div class="invalid-feedback d-block small">
+                                <div class="invalid-feedback d-block small mt-1">
                                     {% for error in form.username.errors %}{{ error }}{% endfor %}
                                 </div>
                                 {% endif %}
-                                <div class="form-text">
-                                    {{ form.username.help_text }}
-                                </div>
+                                <div class="form-text" style="color:#9ca3af;">{{ form.username.help_text }}</div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="id_password1" class="form-label small fw-semibold">Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="bi bi-lock text-muted"></i>
+                                <label for="id_password1" class="form-label small fw-semibold" style="color:#374151;">Password</label>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock" style="color:#7c3aed;"></i>
                                     </span>
-                                    <input
-                                        type="password"
-                                        name="password1"
-                                        id="id_password1"
-                                        class="form-control border-start-0 ps-0 {% if form.password1.errors %}is-invalid{% endif %}"
-                                        placeholder="Choose a strong password"
-                                        required
-                                    >
+                                    <input type="password" name="password1" id="id_password1"
+                                           class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                                           placeholder="Choose a strong password" required>
                                 </div>
                                 {% if form.password1.errors %}
-                                <div class="invalid-feedback d-block small">
+                                <div class="invalid-feedback d-block small mt-1">
                                     {% for error in form.password1.errors %}{{ error }}{% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
 
                             <div class="mb-4">
-                                <label for="id_password2" class="form-label small fw-semibold">Confirm Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="bi bi-lock-fill text-muted"></i>
+                                <label for="id_password2" class="form-label small fw-semibold" style="color:#374151;">Confirm Password</label>
+                                <div class="input-group auth-input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock-fill" style="color:#7c3aed;"></i>
                                     </span>
-                                    <input
-                                        type="password"
-                                        name="password2"
-                                        id="id_password2"
-                                        class="form-control border-start-0 ps-0 {% if form.password2.errors %}is-invalid{% endif %}"
-                                        placeholder="Repeat your password"
-                                        required
-                                    >
+                                    <input type="password" name="password2" id="id_password2"
+                                           class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                                           placeholder="Repeat your password" required>
                                 </div>
                                 {% if form.password2.errors %}
-                                <div class="invalid-feedback d-block small">
+                                <div class="invalid-feedback d-block small mt-1">
                                     {% for error in form.password2.errors %}{{ error }}{% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
 
                             <button type="submit" class="btn w-100 py-2 fw-semibold text-white"
-                                    style="background:linear-gradient(135deg,#e91e63,#ff6090);border:none;border-radius:10px;box-shadow:0 4px 14px rgba(233,30,99,.35);">
+                                    style="background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:10px;box-shadow:0 4px 16px rgba(124,58,237,.4);">
                                 <i class="bi bi-person-plus me-2"></i>Create Account
                             </button>
                         </form>
 
-                        <hr class="my-4">
-
-                        <p class="text-center text-muted small mb-0">
+                        <hr class="my-4" style="border-color:#f0eeff;">
+                        <p class="text-center small mb-0" style="color:#6b7280;">
                             Already have an account?
-                            <a href="{% url 'login' %}" class="text-decoration-none fw-semibold" style="color: #e91e63;">
+                            <a href="{% url 'login' %}" class="fw-semibold text-decoration-none" style="color:#7c3aed;">
                                 Sign in here
                             </a>
                         </p>
                     </div>
                 </div>
 
-                <p class="text-center text-white-50 small mt-4">
-                    &copy; {{ year|default:"2026" }} Strativ AB. All rights reserved.
+                <p class="text-center small mt-4" style="color:rgba(255,255,255,.25);">
+                    &copy; {% now "Y" %} Strativ AB
                 </p>
             </div>
         </div>
