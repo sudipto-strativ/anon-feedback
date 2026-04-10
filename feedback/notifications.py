@@ -75,7 +75,7 @@ def notify_new_comment(comment):
     try:
         role_display = comment.author.profile.role_display
     except Exception:
-        role_display = 'Employee'
+        role_display = 'Member'
 
     msg = (
         f":speech_balloon: *<{url}|New Comment>* · _{role_display}_\n"
