@@ -9,38 +9,31 @@
     <div class="col-12 col-md-10 col-lg-7 col-xl-6">
 
         <!-- Tab row -->
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <span class="fw-700 text-muted small text-uppercase" style="letter-spacing:.06em;">
-                <i class="bi bi-broadcast me-1" style="color:var(--pink);"></i> Feed
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <span class="small fw-700 text-uppercase" style="letter-spacing:.07em; color:var(--t3);">
+                <i class="bi bi-broadcast me-1" style="color:var(--violet);"></i> Feed
             </span>
-            <ul class="nav tab-pills gap-1 mb-0">
-                <li class="nav-item">
-                    <a class="nav-link py-1 {% if current_tab == 'recent' %}active{% endif %}" href="?tab=recent">
-                        <i class="bi bi-clock me-1"></i> Recent
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link py-1 {% if current_tab == 'top' %}active{% endif %}" href="?tab=top">
-                        <i class="bi bi-arrow-up-circle me-1"></i> Top
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link py-1 {% if current_tab == 'hot' %}active{% endif %}" href="?tab=hot">
-                        <i class="bi bi-fire me-1"></i> Hot
-                    </a>
-                </li>
-            </ul>
+            <div class="seg-ctrl">
+                <a href="?tab=recent" class="seg-ctrl-item {% if current_tab == 'recent' %}active{% endif %}">
+                    <i class="bi bi-clock"></i> Recent
+                </a>
+                <a href="?tab=top" class="seg-ctrl-item {% if current_tab == 'top' %}active{% endif %}">
+                    <i class="bi bi-trophy"></i> Top
+                </a>
+                <a href="?tab=hot" class="seg-ctrl-item {% if current_tab == 'hot' %}active{% endif %}">
+                    <i class="bi bi-fire"></i> Hot
+                </a>
+            </div>
         </div>
 
-        <!-- Compose box -->
+        <!-- Compose -->
         <div class="compose-box">
             <div class="compose-avatar">{{ request.user.username|slice:":1"|upper }}</div>
-            <a href="{% url 'post_create' %}" class="compose-trigger text-decoration-none">
+            <a href="{% url 'post_create' %}" class="compose-trigger">
                 What's on your mind? Share anonymously…
             </a>
         </div>
 
-        <!-- Posts -->
         {% if posts %}
             {% for post in posts %}
                 {% include "feedback/partials/post_card.html" with truncate=True %}
@@ -48,10 +41,10 @@
         {% else %}
             <div class="text-center py-5">
                 <div style="font-size:3.5rem; margin-bottom:12px;">💬</div>
-                <h5 class="fw-bold text-muted">No feedback yet</h5>
-                <p class="text-muted small mb-4">Be the first to share something with the team.</p>
-                <a href="{% url 'post_create' %}" class="btn btn-lg px-5 fw-semibold text-white"
-                   style="background:linear-gradient(135deg,#e91e63,#ff6090);border:none;border-radius:10px;box-shadow:0 4px 14px rgba(233,30,99,.35);">
+                <h5 class="fw-bold" style="color:var(--t1);">No feedback yet</h5>
+                <p style="color:var(--t2);" class="small mb-4">Be the first to share something with the team.</p>
+                <a href="{% url 'post_create' %}" class="btn px-5 fw-semibold text-white"
+                   style="background:linear-gradient(135deg,var(--rose),#fb7185);border:none;border-radius:10px;box-shadow:0 4px 14px var(--rose-glow);">
                     <i class="bi bi-plus-lg me-2"></i>Post Feedback
                 </a>
             </div>
@@ -60,7 +53,6 @@
     </div>
 </div>
 
-<!-- FAB -->
 <a href="{% url 'post_create' %}" class="fab-btn" title="New Feedback">
     <i class="bi bi-plus-lg"></i>
 </a>

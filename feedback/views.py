@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import CommentForm, PostForm, RegisterForm, StatusUpdateForm
-from .models import Comment, Favourite, Post, Vote
+from .models import Comment, CommentImage, Favourite, Post, PostAttachment, Vote
 from .notifications import notify_new_comment, notify_new_post, notify_status_update
 
 
@@ -43,7 +43,7 @@ def feed(request):
     current_tab = request.GET.get('tab', 'recent')
 
     posts = Post.objects.select_related('author', 'author__profile').prefetch_related(
-        'votes', 'comments'
+        'votes', 'comments', 'attachments'
     )
 
     if current_tab == 'top':
@@ -80,7 +80,7 @@ def list_view(request):
     search_query = request.GET.get('q', '').strip()
 
     posts = Post.objects.select_related('author', 'author__profile').prefetch_related(
-        'votes', 'comments'
+        'votes', 'comments', 'attachments'
     )
 
     if status_filter:
@@ -112,10 +112,10 @@ def list_view(request):
 def post_detail(request, pk):
     """Post detail view with comment submission."""
     post = get_object_or_404(
-        Post.objects.select_related('author', 'author__profile', 'status_updated_by'),
+        Post.objects.select_related('author', 'author__profile', 'status_updated_by').prefetch_related('attachments'),
         pk=pk
     )
-    comments = post.comments.select_related('author', 'author__profile').prefetch_related('votes')
+    comments = post.comments.select_related('author', 'author__profile').prefetch_related('votes', 'images')
 
     # User's vote on the post
     user_post_vote = None
@@ -151,12 +151,14 @@ def post_detail(request, pk):
         pass
 
     if request.method == 'POST':
-        comment_form = CommentForm(request.POST)
+        comment_form = CommentForm(request.POST, request.FILES)
         if comment_form.is_valid():
             comment = comment_form.save(commit=False)
             comment.post = post
             comment.author = request.user
             comment.save()
+            if comment_form.cleaned_data.get('image'):
+                CommentImage.objects.create(comment=comment, image=comment_form.cleaned_data['image'])
             notify_new_comment(comment)
             messages.success(request, 'Your comment has been posted.')
             return redirect('post_detail', pk=pk)
@@ -176,11 +178,13 @@ def post_detail(request, pk):
 def post_create(request):
     """Create a new feedback post."""
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
+            for f in form.cleaned_data.get('attachments') or []:
+                PostAttachment.objects.create(post=post, file=f)
             notify_new_post(post)
             messages.success(request, 'Your feedback has been posted anonymously.')
             return redirect('feed')
@@ -339,7 +343,7 @@ def favourites_feed(request):
     posts = Post.objects.filter(
         id__in=favourited_post_ids
     ).select_related('author', 'author__profile').prefetch_related(
-        'votes', 'comments'
+        'votes', 'comments', 'attachments'
     ).order_by('-created_at')
 
     post_ids = list(posts.values_list('id', flat=True))

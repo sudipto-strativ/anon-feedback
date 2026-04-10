@@ -2,15 +2,15 @@
 {% with user_vote=user_vote_map|get_item:post.id %}
 {% with is_fav=favourite_set|get_item:post.id %}
 
-<div class="fb-card" id="post-card-{{ post.id }}">
+<div class="fb-card status-{{ post.status }}" id="post-card-{{ post.id }}">
 
-    <!-- Status stripe -->
-    <div class="fb-card-stripe {{ post.status }}"></div>
+    <!-- Left status bar -->
+    <div class="fb-card-status-bar {{ post.status }}"></div>
 
-    <!-- Header row -->
+    <!-- Header -->
     <div class="fb-card-header">
         <div class="fb-avatar" style="background: {{ post.id|avatar_gradient }};">
-            <i class="bi bi-incognito" style="font-size:1.1rem;"></i>
+            <i class="bi bi-incognito" style="font-size:1rem;"></i>
         </div>
 
         <div class="flex-grow-1 min-width-0">
@@ -18,14 +18,14 @@
             <div class="fb-avatar-time d-flex align-items-center gap-2">
                 <span>{{ post.created_at|timesince_short }}</span>
                 <span style="color:#d1d5db;">·</span>
-                <i class="bi bi-globe2" style="font-size:.7rem; color:#94a3b8;"></i>
+                <i class="bi bi-globe2" style="font-size:.65rem; color:var(--t3);"></i>
             </div>
         </div>
 
-        <!-- Status badge + ETA -->
         <div class="d-flex align-items-center gap-2 flex-shrink-0">
             {% if post.eta %}
-            <span class="post-meta d-none d-sm-inline">
+            <span class="post-meta d-none d-sm-inline-flex align-items-center gap-1"
+                  style="background:var(--bg); border:1px solid var(--border); padding:2px 8px; border-radius:8px;">
                 <i class="bi bi-calendar3"></i> {{ post.eta|date:"M d" }}
             </span>
             {% endif %}
@@ -39,76 +39,64 @@
         </div>
     </div>
 
-    <!-- Post body -->
+    <!-- Body -->
     <div class="fb-card-body">
         <a href="{% url 'post_detail' post.id %}" class="text-decoration-none">
-            <p class="fb-text {% if truncate != False %}truncated{% endif %}">
-                {{ post.content }}
-            </p>
+            <p class="fb-text {% if truncate != False %}truncated{% endif %}">{{ post.content }}</p>
         </a>
+        {% with attachments=post.attachments.all %}
+        {% if attachments %}
+        <div class="d-flex align-items-center gap-1 mt-1" style="font-size:.76rem; color:var(--t3);">
+            <i class="bi bi-paperclip"></i>
+            {{ attachments|length }} attachment{{ attachments|length|pluralize }}
+        </div>
+        {% endif %}
+        {% endwith %}
     </div>
 
     <!-- Reaction counts -->
-    {% if post.like_count or post.dislike_count or post.comment_count %}
+    {% if post.comment_count %}
     <div class="fb-counts">
-        <div class="fb-counts-left">
-            {% if post.like_count or post.dislike_count %}
-            <div class="fb-counts-icons">
-                {% if post.like_count %}
-                <div class="fb-reaction-icon" style="background:#1877f2;">
-                    <i class="bi bi-hand-thumbs-up-fill" style="color:#fff;"></i>
-                </div>
-                {% endif %}
-                {% if post.dislike_count %}
-                <div class="fb-reaction-icon" style="background:#ef4444;">
-                    <i class="bi bi-hand-thumbs-down-fill" style="color:#fff;"></i>
-                </div>
-                {% endif %}
-            </div>
-            <span>{{ post.score }}</span>
-            {% endif %}
-        </div>
-        {% if post.comment_count %}
-        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none" style="color:#65676b;">
+        <div class="fb-counts-left"></div>
+        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none" style="color:var(--t2);">
+            <i class="bi bi-chat-dots-fill" style="color:var(--violet); opacity:.6;"></i>
             {{ post.comment_count }} comment{{ post.comment_count|pluralize }}
         </a>
-        {% endif %}
     </div>
     {% endif %}
 
-    <!-- Divider -->
     <div class="fb-divider"></div>
 
-    <!-- Action buttons -->
+    <!-- Action bar -->
     <div class="fb-actions">
-        <button
-            class="fb-action-btn {% if user_vote == 'like' %}active-like{% endif %}"
-            id="like-btn-post-{{ post.id }}"
-            onclick="votePost({{ post.id }}, 'like')"
-        >
-            <i class="bi bi-hand-thumbs-up{% if user_vote == 'like' %}-fill{% endif %}"></i>
-            Upvote
-        </button>
-
-        <div class="fb-action-divider"></div>
-
-        <button
-            class="fb-action-btn {% if user_vote == 'dislike' %}active-dislike{% endif %}"
-            id="dislike-btn-post-{{ post.id }}"
-            onclick="votePost({{ post.id }}, 'dislike')"
-        >
-            <i class="bi bi-hand-thumbs-down{% if user_vote == 'dislike' %}-fill{% endif %}"></i>
-            Downvote
-        </button>
-
-        <!-- Hidden score element used by JS -->
-        <span id="score-post-{{ post.id }}" class="d-none">{{ post.score }}</span>
+        <!-- Vote cluster -->
+        <div class="vote-cluster">
+            <button
+                class="vcluster-btn {% if user_vote == 'like' %}active-like{% endif %}"
+                id="like-btn-post-{{ post.id }}"
+                onclick="votePost({{ post.id }}, 'like')"
+                title="Upvote"
+            >
+                <i class="bi bi-hand-thumbs-up{% if user_vote == 'like' %}-fill{% endif %}"></i>
+            </button>
+            <span id="score-post-{{ post.id }}"
+                  class="vcluster-score {% if post.score > 0 %}positive{% elif post.score < 0 %}negative{% endif %}">
+                {{ post.score }}
+            </span>
+            <button
+                class="vcluster-btn {% if user_vote == 'dislike' %}active-dislike{% endif %}"
+                id="dislike-btn-post-{{ post.id }}"
+                onclick="votePost({{ post.id }}, 'dislike')"
+                title="Downvote"
+            >
+                <i class="bi bi-hand-thumbs-down{% if user_vote == 'dislike' %}-fill{% endif %}"></i>
+            </button>
+        </div>
 
         <div class="fb-action-divider"></div>
 
         <a href="{% url 'post_detail' post.id %}" class="fb-action-btn">
-            <i class="bi bi-chat-dots"></i>
-            Comment
+            <i class="bi bi-chat-dots"></i> Comment
         </a>
 
         <div class="fb-action-divider"></div>
