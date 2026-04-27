@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [
-        ('employee', 'Employee'),
+        ('employee', 'Member'),
         ('hr', 'HR'),
         ('ceo', 'CEO'),
     ]
@@ -18,7 +18,7 @@ class UserProfile(models.Model):
 
     @property
     def role_display(self):
-        return dict(self.ROLE_CHOICES).get(self.role, 'Employee')
+        return dict(self.ROLE_CHOICES).get(self.role, 'Member')
 
 
 class NotificationEmail(models.Model):

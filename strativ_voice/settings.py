@@ -124,6 +124,10 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# Session expires after 24 hours
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+
 # Email — SendGrid SMTP relay
 # Set EMAIL_BACKEND to the SMTP backend in production.
 # In development, leave it unset (or set to console) to avoid real sends.
