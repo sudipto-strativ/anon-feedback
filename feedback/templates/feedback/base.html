@@ -1303,23 +1303,6 @@
                     </h1>
                 </div>
                 <div class="user-info">
-                    <div class="user-avatar">
-                        {{ user.username|slice:":1"|upper }}
-                    </div>
-                    <span class="username-display">{{ user.username }}</span>
-                    {% with role=user.profile.role %} {% if role == 'hr' %}
-                    <span class="role-badge role-badge-hr"
-                        ><i class="bi bi-briefcase-fill"></i> HR</span
-                    >
-                    {% elif role == 'ceo' %}
-                    <span class="role-badge role-badge-ceo"
-                        ><i class="bi bi-star-fill"></i> CEO</span
-                    >
-                    {% elif role == 'admin' %}
-                    <span class="role-badge role-badge-admin"
-                        ><i class="bi bi-shield-fill"></i> Admin</span
-                    >
-                    {% endif %} {% endwith %}
                     <form method="post" action="{% url 'logout' %}" class="m-0">
                         {% csrf_token %}
                         <button
