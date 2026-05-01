@@ -194,6 +194,12 @@ class UserRoleBadgeTagTest(TestCase):
         self.assertIn('role-badge-ceo', result)
         self.assertIn('CEO', result)
 
+    def test_admin_badge(self):
+        user = make_user('alice', 'admin')
+        result = user_role_badge(user)
+        self.assertIn('role-badge-admin', result)
+        self.assertIn('Admin', result)
+
     def test_user_without_profile(self):
         user = User(username='noprofile')
         result = user_role_badge(user)

@@ -292,6 +292,7 @@ class UpdateStatusViewTest(TestCase):
         self.employee = make_user('employee', role='employee')
         self.hr = make_user('hr', role='hr')
         self.ceo = make_user('ceo', role='ceo')
+        self.admin = make_user('admin_user', role='admin')
         self.post = make_post(self.employee)
 
     def test_employee_cannot_update_status(self):
@@ -324,6 +325,17 @@ class UpdateStatusViewTest(TestCase):
             )
         self.post.refresh_from_db()
         self.assertEqual(self.post.status, 'done')
+
+    def test_admin_can_update_status(self):
+        self.client.login(username='admin_user', password='pass')
+        with patch('feedback.views.notify_status_update'):
+            self.client.post(
+                reverse('update_status', args=[self.post.pk]),
+                {'status': 'in_progress', 'remark': '', 'eta': ''},
+            )
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.status, 'in_progress')
+        self.assertEqual(self.post.status_updated_by, self.admin)
 
     def test_done_requires_remark(self):
         self.client.login(username='hr', password='pass')

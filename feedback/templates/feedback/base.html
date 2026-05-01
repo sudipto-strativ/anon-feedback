@@ -486,6 +486,7 @@
         .role-badge-hr       { background: #dbeafe; color: #1e3a8a; border: 1px solid #bfdbfe; }
         .role-badge-employee { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
         .role-badge-ceo      { background: #fef9c3; color: #713f12; border: 1px solid #fde68a; }
+        .role-badge-admin    { background: #ede9fe; color: #4c1d95; border: 1px solid #c4b5fd; }
 
         /* Comments */
         .fb-comment { display: flex; gap: 9px; margin-bottom: 12px; }
@@ -499,6 +500,7 @@
         .fb-comment-avatar-hr       { background: linear-gradient(135deg,#3b82f6,#6366f1); box-shadow: 0 2px 6px rgba(59,130,246,.3); }
         .fb-comment-avatar-ceo      { background: linear-gradient(135deg,#f59e0b,#f97316); box-shadow: 0 2px 6px rgba(245,158,11,.3); }
         .fb-comment-avatar-employee { background: linear-gradient(135deg,#64748b,#94a3b8); }
+        .fb-comment-avatar-admin    { background: linear-gradient(135deg,#7c3aed,#a855f7); box-shadow: 0 2px 6px rgba(124,58,237,.3); }
 
         .fb-comment-right { flex: 1; min-width: 0; }
 
@@ -511,6 +513,7 @@
         .fb-comment-bubble-employee { background: var(--bg); border: 1px solid var(--border); }
         .fb-comment-bubble-hr       { background: #eff6ff; border: 1px solid #dbeafe; }
         .fb-comment-bubble-ceo      { background: #fefce8; border: 1px solid #fef08a; }
+        .fb-comment-bubble-admin    { background: #f5f3ff; border: 1px solid #ede9fe; }
 
         .fb-comment-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
         .fb-comment-time { font-size: .7rem; color: var(--t3); }
@@ -746,6 +749,8 @@
                     <span class="role-badge role-badge-hr"><i class="bi bi-briefcase-fill"></i> HR</span>
                 {% elif role == 'ceo' %}
                     <span class="role-badge role-badge-ceo"><i class="bi bi-star-fill"></i> CEO</span>
+                {% elif role == 'admin' %}
+                    <span class="role-badge role-badge-admin"><i class="bi bi-shield-fill"></i> Admin</span>
                 {% endif %}
             {% endwith %}
             <form method="post" action="{% url 'logout' %}" class="m-0">

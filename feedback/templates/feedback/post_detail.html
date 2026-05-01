@@ -161,7 +161,7 @@
             <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-pencil-square" style="color:var(--violet);"></i>
                 <span class="fw-bold small" style="color:#4c1d95;">Update Status</span>
-                <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% else %}role-badge-ceo{% endif %}">
+                <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% elif request.user.profile.role == 'admin' %}role-badge-admin{% else %}role-badge-ceo{% endif %}">
                     {{ request.user.profile.role_display }}
                 </span>
             </div>

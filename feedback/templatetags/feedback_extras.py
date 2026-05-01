@@ -137,6 +137,8 @@ def user_role_badge(user):
             return f'<span class="role-badge-hr">HR</span>'
         elif role == 'ceo':
             return f'<span class="role-badge-ceo">CEO</span>'
+        elif role == 'admin':
+            return f'<span class="role-badge-admin">Admin</span>'
         else:
             return f'<span class="role-badge-employee">Member</span>'
     except Exception:

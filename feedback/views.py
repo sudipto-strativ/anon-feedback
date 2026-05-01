@@ -144,7 +144,7 @@ def post_detail(request, pk):
     can_update_status = False
     try:
         role = request.user.profile.role
-        if role in ('ceo', 'hr'):
+        if role in ('ceo', 'hr', 'admin'):
             can_update_status = True
             status_form = StatusUpdateForm(instance=post)
     except Exception:
@@ -299,7 +299,7 @@ def update_status(request, pk):
     except Exception:
         role = 'employee'
 
-    if role not in ('ceo', 'hr'):
+    if role not in ('ceo', 'hr', 'admin'):
         return JsonResponse({'error': 'Permission denied'}, status=403)
 
     form = StatusUpdateForm(request.POST, instance=post)

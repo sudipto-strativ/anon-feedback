@@ -38,6 +38,10 @@ class UserProfileModelTest(TestCase):
         self.profile.role = 'ceo'
         self.assertEqual(self.profile.role_display, 'CEO')
 
+    def test_role_display_admin(self):
+        self.profile.role = 'admin'
+        self.assertEqual(self.profile.role_display, 'Admin')
+
     def test_role_display_unknown(self):
         self.profile.role = 'unknown'
         self.assertEqual(self.profile.role_display, 'Member')
