@@ -1,0 +1,5 @@
+{
+  "env": {
+    "OTEL_RESOURCE_ATTRIBUTES": "project.name=strativ-voice,team.name=strativ-voice-team,client.name=strativ"
+  }
+}
