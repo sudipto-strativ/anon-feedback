@@ -86,11 +86,11 @@
              style="background:{% if post.status == 'done' %}#f0fdf4{% else %}#fff5f5{% endif %};
                     border-left:4px solid {% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};">
             <i class="bi bi-chat-left-quote-fill mt-1 flex-shrink-0"
-               style="color:{% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};"></i>
+               style="color:{% if post.status == 'done' %}#10b981{% elif post.status == 'rejected' %}#ef4444{% else %}#3b82f6{% endif %};"></i>
             <div>
                 <div class="fw-semibold small mb-1"
-                     style="color:{% if post.status == 'done' %}#064e3b{% else %}#7f1d1d{% endif %};">
-                    {% if post.status == 'done' %}Resolution Summary{% else %}Rejection Reason{% endif %}
+                     style="color:{% if post.status == 'done' %}#064e3b{% elif post.status == 'rejected' %}#7f1d1d{% else %}#1e3a5f{% endif %};">
+                    {% if post.status == 'done' %}Resolution Summary{% elif post.status == 'rejected' %}Rejection Reason{% else %}Feedback{% endif %}
                 </div>
                 <p class="mb-0 small" style="color:#374151; line-height:1.6;">{{ post.remark }}</p>
             </div>
