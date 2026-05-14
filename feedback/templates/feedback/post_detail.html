@@ -4,6 +4,48 @@
 {% block title %}Feedback #{{ post.id }} — Strativ Voice{% endblock %}
 {% block page_title %}Feedback Detail{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<style>
+#comment-compose-editor .EasyMDEContainer .CodeMirror {
+    border: 1px solid var(--border);
+    border-radius: 0 0 10px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: .855rem;
+    line-height: 1.5;
+    padding: 6px 8px;
+    background: var(--bg);
+    color: var(--t1);
+    min-height: 60px;
+}
+#comment-compose-editor .EasyMDEContainer .editor-toolbar {
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background: var(--bg);
+    opacity: 1;
+    padding: 2px 6px;
+}
+#comment-compose-editor .EasyMDEContainer .editor-toolbar button {
+    color: var(--t2) !important;
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+}
+#comment-compose-editor .EasyMDEContainer .editor-toolbar button:hover,
+#comment-compose-editor .EasyMDEContainer .editor-toolbar button.active {
+    background: var(--violet-light) !important;
+    color: var(--violet) !important;
+    border-color: transparent !important;
+}
+#comment-compose-editor .EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border); }
+#comment-compose-editor .EasyMDEContainer .CodeMirror-focused {
+    box-shadow: 0 0 0 3px var(--violet-glow);
+    border-color: var(--violet);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
 <div class="col-12 col-md-10 col-lg-7 col-xl-6">
@@ -159,7 +201,7 @@
 
             <div class="fb-action-divider"></div>
 
-            <button class="fb-action-btn" onclick="document.getElementById('comment-input').focus()">
+            <button class="fb-action-btn" onclick="commentEasyMDE.codemirror.focus(); commentEasyMDE.codemirror.getScrollerElement().scrollIntoView({behavior:'smooth'})">
                 <i class="bi bi-chat-dots"></i> Comment
             </button>
         </div>
@@ -244,15 +286,8 @@
                 </div>
                 <form method="post" enctype="multipart/form-data" class="flex-grow-1">
                     {% csrf_token %}
-                    <div class="fb-comment-input-wrap">
-                        <textarea
-                            id="comment-input"
-                            name="content"
-                            class="fb-comment-input"
-                            placeholder="Write a comment… (or attach an image)"
-                            rows="1"
-                            oninput="autoResize(this)"
-                        ></textarea>
+                    <div id="comment-compose-editor">
+                        <textarea id="comment-input" name="content"></textarea>
                         {% if comment_form.content.errors %}
                         <div class="text-danger small mt-1">
                             {% for error in comment_form.content.errors %}{{ error }}{% endfor %}
@@ -295,11 +330,18 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
-function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-}
+const commentEasyMDE = new EasyMDE({
+    element: document.getElementById('comment-input'),
+    placeholder: 'Write a comment… **bold**, *italic*, `code`, - list',
+    spellChecker: false,
+    status: false,
+    autofocus: false,
+    toolbar: ['bold', 'italic', '|', 'unordered-list', '|', 'code', 'quote', '|', 'preview'],
+    minHeight: '60px',
+    renderingConfig: { singleLineBreaks: false },
+});
 
 const statusSelect = document.getElementById('id_status');
 const remarkIndicator = document.getElementById('remark-required-indicator');
@@ -315,6 +357,7 @@ if (statusSelect && remarkIndicator) {
 const commentForm = document.querySelector('form[enctype="multipart/form-data"]');
 if (commentForm) {
     commentForm.addEventListener('submit', function () {
+        commentEasyMDE.codemirror.save();
         const btn = document.getElementById('comment-submit-btn');
         if (btn) {
             btn.disabled = true;

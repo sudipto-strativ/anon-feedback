@@ -36,7 +36,7 @@
             </div>
 
             {% if comment.content %}
-            <p class="fb-comment-text">{{ comment.content }}</p>
+            <div class="md-content fb-comment-text">{{ comment.content|render_markdown }}</div>
             {% endif %}
 
             {% for img in comment.images.all %}
