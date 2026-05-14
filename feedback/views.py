@@ -13,8 +13,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import CommentForm, PostForm, RegisterForm, StatusUpdateForm
-from .models import Comment, CommentImage, Favourite, Post, PostAttachment, Vote
-from .notifications import notify_new_comment, notify_new_post, notify_status_update
+from .models import Comment, CommentImage, Favourite, Notification, Post, PostAttachment, Vote
+from .notifications import create_comment_notifications, create_status_notification, notify_new_comment, notify_new_post, notify_status_update
 
 
 def _visible_posts_q(user):
@@ -183,6 +183,7 @@ def post_detail(request, pk):
             if comment_form.cleaned_data.get('image'):
                 CommentImage.objects.create(comment=comment, image=comment_form.cleaned_data['image'])
             notify_new_comment(comment)
+            create_comment_notifications(comment)
             messages.success(request, 'Your comment has been posted.')
             return redirect('post_detail', pk=pk)
 
@@ -337,6 +338,7 @@ def update_status(request, pk):
         updated_post.status_updated_by = request.user
         updated_post.save()
         notify_status_update(updated_post, request.user)
+        create_status_notification(updated_post)
         messages.success(request, f'Status updated to "{updated_post.get_status_display()}".')
         return redirect('post_detail', pk=pk)
 
@@ -384,6 +386,26 @@ def favourites_feed(request):
         'user_vote_map': _build_vote_map(request.user, post_ids),
         'favourite_set': _build_favourite_set(request.user, post_ids),
     })
+
+
+@login_required
+def notifications_list(request):
+    """Show all notifications for the current user; marks them all as read."""
+    notifications = (
+        Notification.objects
+        .filter(recipient=request.user)
+        .select_related('post', 'comment', 'comment__author__profile')
+    )
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return render(request, 'feedback/notifications.html', {'notifications': notifications})
+
+
+@login_required
+@require_POST
+def mark_notifications_read(request):
+    """Mark all unread notifications as read. Returns JSON {unread_count: 0}."""
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'unread_count': 0})
 
 
 def register(request):

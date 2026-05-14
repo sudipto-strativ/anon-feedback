@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 from django.urls import reverse
-from .models import NotificationEmail, SlackConfig
+from .models import Comment, Notification, NotificationEmail, SlackConfig
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +117,43 @@ def notify_new_comment(comment):
             )
         except Exception as e:
             logger.error(f"Email notification failed for comment: {e}")
+
+
+def create_status_notification(post):
+    """Notify the post author when status, ETA, or remark is updated."""
+    Notification.objects.create(
+        recipient=post.author,
+        post=post,
+        notification_type=Notification.TYPE_STATUS,
+    )
+
+
+def create_comment_notifications(comment):
+    """Create in-app notifications for a new comment.
+
+    Notifies the post author and anyone who has previously commented on the
+    same post, excluding the person who just posted the comment.
+    """
+    post = comment.post
+    commenter_id = comment.author_id
+
+    recipient_ids = set()
+    recipient_ids.add(post.author_id)
+    prior_ids = (
+        Comment.objects
+        .filter(post=post)
+        .exclude(pk=comment.pk)
+        .values_list('author_id', flat=True)
+        .distinct()
+    )
+    recipient_ids.update(prior_ids)
+    recipient_ids.discard(commenter_id)
+
+    if recipient_ids:
+        Notification.objects.bulk_create([
+            Notification(recipient_id=uid, post=post, comment=comment)
+            for uid in recipient_ids
+        ])
 
 
 def notify_status_update(post, updated_by):

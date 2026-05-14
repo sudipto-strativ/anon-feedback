@@ -191,6 +191,34 @@ class CommentImage(models.Model):
         return f"Image for Comment #{self.comment_id}"
 
 
+class Notification(models.Model):
+    TYPE_COMMENT = 'comment'
+    TYPE_STATUS = 'status_update'
+    TYPE_CHOICES = [
+        (TYPE_COMMENT, 'Comment'),
+        (TYPE_STATUS, 'Status Update'),
+    ]
+
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_COMMENT)
+    comment = models.ForeignKey(
+        'Comment', on_delete=models.CASCADE, related_name='notifications',
+        null=True, blank=True,
+    )
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', 'is_read']),
+        ]
+
+    def __str__(self):
+        return f"Notification for {self.recipient.username} → Post #{self.post_id}"
+
+
 class Vote(models.Model):
     VOTE_CHOICES = [('like', 'Like'), ('dislike', 'Dislike')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')

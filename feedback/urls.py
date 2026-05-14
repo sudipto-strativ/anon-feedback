@@ -11,5 +11,7 @@ urlpatterns = [
     path('post/<int:pk>/vote/', views.vote_post, name='vote_post'),
     path('post/<int:pk>/update-status/', views.update_status, name='update_status'),
     path('comment/<int:pk>/vote/', views.vote_comment, name='vote_comment'),
+    path('notifications/', views.notifications_list, name='notifications'),
+    path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
     path('register/', views.register, name='register'),
 ]
