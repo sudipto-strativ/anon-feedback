@@ -38,18 +38,26 @@ def _post_url(post):
 
 
 def notify_new_post(post):
-    """Notify admins about a new post via Slack and email."""
+    """Notify admins about a new post via Slack (public only) and email."""
     url = _post_url(post)
-    msg = (
-        f":mega: *<{url}|New Feedback Posted>*\n"
-        f">{post.content[:200]}"
-    )
-    send_slack_message(msg)
+
+    if not post.target_role:
+        msg = (
+            f":mega: *<{url}|New Feedback Posted>*\n"
+            f">{post.content[:200]}"
+        )
+        send_slack_message(msg)
 
     if not getattr(settings, 'EMAIL_NOTIFICATION_ENABLED', True):
         return
 
-    emails = list(NotificationEmail.objects.filter(notify_on_new_post=True).values_list('email', flat=True))
+    email_qs = NotificationEmail.objects.filter(notify_on_new_post=True)
+    if post.target_role:
+        email_qs = email_qs.filter(role=post.target_role)
+    else:
+        email_qs = email_qs.filter(role__isnull=True)
+
+    emails = list(email_qs.values_list('email', flat=True))
     if emails:
         try:
             send_mail(
@@ -68,7 +76,7 @@ def notify_new_post(post):
 
 
 def notify_new_comment(comment):
-    """Notify about a new comment via Slack and email."""
+    """Notify about a new comment via Slack (public posts only) and email."""
     post = comment.post
     url = _post_url(post)
 
@@ -77,16 +85,23 @@ def notify_new_comment(comment):
     except Exception:
         role_display = 'Member'
 
-    msg = (
-        f":speech_balloon: *<{url}|New Comment>* · _{role_display}_\n"
-        f">{comment.content[:200]}"
-    )
-    send_slack_message(msg)
+    if not post.target_role:
+        msg = (
+            f":speech_balloon: *<{url}|New Comment>* · _{role_display}_\n"
+            f">{comment.content[:200]}"
+        )
+        send_slack_message(msg)
 
     if not getattr(settings, 'EMAIL_NOTIFICATION_ENABLED', True):
         return
 
-    emails = list(NotificationEmail.objects.filter(notify_on_new_comment=True).values_list('email', flat=True))
+    email_qs = NotificationEmail.objects.filter(notify_on_new_comment=True)
+    if post.target_role:
+        email_qs = email_qs.filter(role=post.target_role)
+    else:
+        email_qs = email_qs.filter(role__isnull=True)
+
+    emails = list(email_qs.values_list('email', flat=True))
     if emails:
         try:
             send_mail(
@@ -105,7 +120,10 @@ def notify_new_comment(comment):
 
 
 def notify_status_update(post, updated_by):
-    """Notify about a status update via Slack."""
+    """Notify about a status update via Slack (public posts only)."""
+    if post.target_role:
+        return
+
     url = _post_url(post)
     eta_str = f" | ETA: {post.eta}" if post.eta else ""
     if post.status in ('done', 'rejected') and post.remark:

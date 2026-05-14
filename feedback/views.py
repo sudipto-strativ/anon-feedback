@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
@@ -14,6 +15,26 @@ from django.views.decorators.http import require_POST
 from .forms import CommentForm, PostForm, RegisterForm, StatusUpdateForm
 from .models import Comment, CommentImage, Favourite, Post, PostAttachment, Vote
 from .notifications import notify_new_comment, notify_new_post, notify_status_update
+
+
+def _visible_posts_q(user):
+    """Return a Q filter for posts the given user is allowed to see."""
+    try:
+        role = user.profile.role
+    except Exception:
+        role = None
+    return Q(target_role__isnull=True) | Q(author=user) | Q(target_role=role)
+
+
+def _can_view_post(user, post):
+    if post.target_role is None:
+        return True
+    if post.author_id == user.pk:
+        return True
+    try:
+        return user.profile.role == post.target_role
+    except Exception:
+        return False
 
 
 def _build_vote_map(user, post_ids):
@@ -42,9 +63,9 @@ def feed(request):
     """Main feed view with tab-based sorting."""
     current_tab = request.GET.get('tab', 'recent')
 
-    posts = Post.objects.select_related('author', 'author__profile').prefetch_related(
-        'votes', 'comments', 'attachments'
-    )
+    posts = Post.objects.filter(_visible_posts_q(request.user)).select_related(
+        'author', 'author__profile'
+    ).prefetch_related('votes', 'comments', 'attachments')
 
     if current_tab == 'top':
         # Sort by score (likes - dislikes) — annotate via Python since score is a property
@@ -79,9 +100,9 @@ def list_view(request):
     status_filter = request.GET.get('status', '')
     search_query = request.GET.get('q', '').strip()
 
-    posts = Post.objects.select_related('author', 'author__profile').prefetch_related(
-        'votes', 'comments', 'attachments'
-    )
+    posts = Post.objects.filter(_visible_posts_q(request.user)).select_related(
+        'author', 'author__profile'
+    ).prefetch_related('votes', 'comments', 'attachments')
 
     if status_filter:
         posts = posts.filter(status=status_filter)
@@ -115,6 +136,8 @@ def post_detail(request, pk):
         Post.objects.select_related('author', 'author__profile', 'status_updated_by').prefetch_related('attachments'),
         pk=pk
     )
+    if not _can_view_post(request.user, post):
+        raise PermissionDenied
     comments = post.comments.select_related('author', 'author__profile').prefetch_related('votes', 'images')
 
     # User's vote on the post
@@ -199,6 +222,8 @@ def post_create(request):
 def vote_post(request, pk):
     """Toggle vote on a post. Returns JSON with updated counts."""
     post = get_object_or_404(Post, pk=pk)
+    if not _can_view_post(request.user, post):
+        return JsonResponse({'error': 'Not found'}, status=404)
 
     try:
         data = json.loads(request.body)
@@ -247,7 +272,9 @@ def vote_post(request, pk):
 @require_POST
 def vote_comment(request, pk):
     """Toggle vote on a comment. Returns JSON with updated counts."""
-    comment = get_object_or_404(Comment, pk=pk)
+    comment = get_object_or_404(Comment.objects.select_related('post'), pk=pk)
+    if not _can_view_post(request.user, comment.post):
+        return JsonResponse({'error': 'Not found'}, status=404)
 
     try:
         data = json.loads(request.body)
@@ -292,6 +319,8 @@ def vote_comment(request, pk):
 def update_status(request, pk):
     """Update the status of a post. Only CEO and HR can do this."""
     post = get_object_or_404(Post, pk=pk)
+    if not _can_view_post(request.user, post):
+        return JsonResponse({'error': 'Not found'}, status=404)
 
     # Check role
     try:
@@ -323,6 +352,8 @@ def update_status(request, pk):
 def toggle_favourite(request, pk):
     """Toggle a post as favourite. Returns JSON {is_favourite: bool}."""
     post = get_object_or_404(Post, pk=pk)
+    if not _can_view_post(request.user, post):
+        return JsonResponse({'error': 'Not found'}, status=404)
     fav = Favourite.objects.filter(user=request.user, post=post).first()
     if fav:
         fav.delete()
@@ -341,7 +372,7 @@ def favourites_feed(request):
     ).values_list('post_id', flat=True)
 
     posts = Post.objects.filter(
-        id__in=favourited_post_ids
+        _visible_posts_q(request.user), id__in=favourited_post_ids
     ).select_related('author', 'author__profile').prefetch_related(
         'votes', 'comments', 'attachments'
     ).order_by('-created_at')

@@ -82,6 +82,24 @@
                         </div>
                     </div>
 
+                    <!-- Visibility -->
+                    <div class="mb-4 p-3 rounded-3" style="background:var(--bg); border:1px solid var(--border);">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" style="color:var(--t1);">
+                            <i class="bi bi-eye" style="color:var(--violet);"></i>
+                            Visibility
+                        </label>
+                        {{ form.target_role }}
+                        {% if form.target_role.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.target_role.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text mt-1" style="color:var(--t3);">
+                            <i class="bi bi-info-circle me-1"></i>
+                            {{ form.target_role.help_text }}
+                        </div>
+                    </div>
+
                     <!-- Attachments -->
                     <div class="mb-4 p-3 rounded-3" style="background:var(--bg); border:1px solid var(--border);">
                         <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" style="color:var(--t1);">

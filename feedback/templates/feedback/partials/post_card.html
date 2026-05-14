@@ -18,7 +18,13 @@
             <div class="fb-avatar-time d-flex align-items-center gap-2">
                 <span>{{ post.created_at|timesince_short }}</span>
                 <span style="color:#d1d5db;">·</span>
+                {% if post.target_role %}
+                <span style="display:inline-flex;align-items:center;gap:3px;font-size:.65rem;color:#7c3aed;background:#ede9fe;padding:1px 6px;border-radius:6px;font-weight:600;">
+                    <i class="bi bi-lock-fill"></i> {{ post.get_target_role_display }} Only
+                </span>
+                {% else %}
                 <i class="bi bi-globe2" style="font-size:.65rem; color:var(--t3);"></i>
+                {% endif %}
             </div>
         </div>
 

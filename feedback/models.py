@@ -24,12 +24,18 @@ class UserProfile(models.Model):
 
 class NotificationEmail(models.Model):
     email = models.EmailField(unique=True)
+    role = models.CharField(
+        max_length=20, null=True, blank=True,
+        choices=UserProfile.ROLE_CHOICES,
+        help_text='If set, only notified for posts targeted at this role. Leave blank for public post notifications.',
+    )
     notify_on_new_post = models.BooleanField(default=True)
     notify_on_new_comment = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.email
+        role_label = f' [{self.get_role_display()}]' if self.role else ''
+        return f"{self.email}{role_label}"
 
 
 class SlackConfig(models.Model):
@@ -54,6 +60,11 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    target_role = models.CharField(
+        max_length=20, null=True, blank=True,
+        choices=UserProfile.ROLE_CHOICES,
+        help_text='If set, only the author and users with this role can see this post.',
+    )
     eta = models.DateField(null=True, blank=True)
     status_updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='status_updates'

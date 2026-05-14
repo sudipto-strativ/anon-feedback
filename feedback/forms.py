@@ -46,6 +46,9 @@ class RegisterForm(UserCreationForm):
             field.widget.attrs['class'] = 'form-control'
 
 
+_TARGET_ROLE_CHOICES = [('', 'Public — visible to everyone')] + UserProfile.ROLE_CHOICES
+
+
 class PostForm(forms.ModelForm):
     attachments = forms.FileField(
         widget=MultipleFileInput(attrs={
@@ -55,10 +58,17 @@ class PostForm(forms.ModelForm):
         required=False,
         help_text='Images, PDF, Word (.doc/.docx), or Excel/CSV. Max 10 MB each.',
     )
+    target_role = forms.ChoiceField(
+        choices=_TARGET_ROLE_CHOICES,
+        required=False,
+        label='Visibility',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text='Restrict who can see this post. Only you and the selected role will have access.',
+    )
 
     class Meta:
         model = Post
-        fields = ['content']
+        fields = ['content', 'target_role']
         widgets = {
             'content': MarkdownTextarea(attrs={
                 'rows': 5,
@@ -66,6 +76,9 @@ class PostForm(forms.ModelForm):
                 'class': 'form-control',
             }),
         }
+
+    def clean_target_role(self):
+        return self.cleaned_data['target_role'] or None
 
     def clean_attachments(self):
         # request.FILES.getlist returns a list; Django's FileField with multiple
