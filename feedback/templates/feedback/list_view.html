@@ -67,7 +67,7 @@
                 <tr style="background:var(--bg); border-bottom:2px solid var(--border);">
                     <th class="ps-4 py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Feedback</th>
                     <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Status</th>
-                    <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Score</th>
+                    <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">Votes</th>
                     <th class="py-3 fw-700 small text-uppercase" style="letter-spacing:.05em; color:var(--t2);">
                         <i class="bi bi-chat-dots-fill" style="color:var(--violet);"></i>
                     </th>
@@ -101,9 +101,12 @@
                         {% endif %}
                     </td>
                     <td class="py-3">
-                        <span class="fw-bold"
-                              style="color:{% if post.score > 0 %}var(--s-emerald){% elif post.score < 0 %}var(--s-red){% else %}var(--t3){% endif %}">
-                            {{ post.score }}
+                        <span class="d-inline-flex align-items-center gap-1" style="font-size:.82rem; font-weight:600; color:var(--violet);">
+                            <i class="bi bi-hand-thumbs-up-fill"></i> {{ post.like_count }}
+                        </span>
+                        <span style="color:var(--border); margin:0 2px;">·</span>
+                        <span class="d-inline-flex align-items-center gap-1" style="font-size:.82rem; font-weight:600; color:var(--s-red);">
+                            <i class="bi bi-hand-thumbs-down-fill"></i> {{ post.dislike_count }}
                         </span>
                     </td>
                     <td class="py-3">

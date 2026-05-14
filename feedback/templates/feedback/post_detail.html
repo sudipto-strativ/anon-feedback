@@ -108,16 +108,19 @@
         <div class="fb-counts">
             <div class="fb-counts-left">
                 {% if post.like_count or post.dislike_count %}
-                <div class="fb-counts-icons">
+                <div class="d-flex align-items-center gap-2">
                     {% if post.like_count %}
-                    <div class="fb-reaction-icon" style="background:var(--violet);">
-                        <i class="bi bi-hand-thumbs-up-fill" style="color:#fff;"></i>
-                    </div>
+                    <span class="d-flex align-items-center gap-1" style="font-size:.8rem; font-weight:600; color:var(--violet);">
+                        <i class="bi bi-hand-thumbs-up-fill"></i> {{ post.like_count }}
+                    </span>
+                    {% endif %}
+                    {% if post.like_count and post.dislike_count %}
+                    <span style="color:var(--border);">·</span>
                     {% endif %}
                     {% if post.dislike_count %}
-                    <div class="fb-reaction-icon" style="background:var(--s-red);">
-                        <i class="bi bi-hand-thumbs-down-fill" style="color:#fff;"></i>
-                    </div>
+                    <span class="d-flex align-items-center gap-1" style="font-size:.8rem; font-weight:600; color:var(--s-red);">
+                        <i class="bi bi-hand-thumbs-down-fill"></i> {{ post.dislike_count }}
+                    </span>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -141,8 +144,9 @@
                 >
                     <i class="bi bi-hand-thumbs-up{% if user_post_vote == 'like' %}-fill{% endif %}"></i>
                 </button>
-                <span class="vcluster-score {% if post.score > 0 %}positive{% elif post.score < 0 %}negative{% endif %}"
-                      id="score-post-{{ post.id }}">{{ post.score }}</span>
+                <span id="like-count-post-{{ post.id }}" class="vcluster-count like-count">{{ post.like_count }}</span>
+                <span class="vcluster-sep">·</span>
+                <span id="dislike-count-post-{{ post.id }}" class="vcluster-count dislike-count">{{ post.dislike_count }}</span>
                 <button
                     class="vcluster-btn {% if user_post_vote == 'dislike' %}active-dislike{% endif %}"
                     id="dislike-btn-post-{{ post.id }}"

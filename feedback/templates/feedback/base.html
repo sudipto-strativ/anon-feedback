@@ -678,19 +678,21 @@
                 color: var(--s-red);
             }
 
-            .vcluster-score {
+            .vcluster-count {
                 font-size: 0.8rem;
                 font-weight: 700;
-                min-width: 26px;
+                min-width: 16px;
                 text-align: center;
-                color: var(--t2);
             }
-
-            .vcluster-score.positive {
+            .vcluster-count.like-count {
                 color: var(--violet);
             }
-            .vcluster-score.negative {
+            .vcluster-count.dislike-count {
                 color: var(--s-red);
+            }
+            .vcluster-sep {
+                color: var(--border);
+                font-size: 0.8rem;
             }
 
             /* Status pills */
@@ -1387,33 +1389,15 @@
 
             function updateVoteUI(type, id, data) {
                 const prefix = `${type}-${id}`;
-                const scoreEl = document.getElementById(`score-${prefix}`);
+                const likeCountEl = document.getElementById(`like-count-${prefix}`);
+                const dislikeCountEl = document.getElementById(`dislike-count-${prefix}`);
                 const likeBtn = document.getElementById(`like-btn-${prefix}`);
                 const dislikeBtn = document.getElementById(
                     `dislike-btn-${prefix}`,
                 );
 
-                if (scoreEl) {
-                    scoreEl.textContent = data.score;
-                    if (scoreEl.classList.contains("vcluster-score")) {
-                        scoreEl.className =
-                            "vcluster-score" +
-                            (data.score > 0
-                                ? " positive"
-                                : data.score < 0
-                                  ? " negative"
-                                  : "");
-                    } else if (scoreEl.classList.contains("fb-comment-score")) {
-                        scoreEl.style.display = data.score !== 0 ? "" : "none";
-                        scoreEl.className =
-                            "fb-comment-score" +
-                            (data.score > 0
-                                ? " positive"
-                                : data.score < 0
-                                  ? " negative"
-                                  : "");
-                    }
-                }
+                if (likeCountEl) likeCountEl.textContent = data.like_count;
+                if (dislikeCountEl) dislikeCountEl.textContent = data.dislike_count;
 
                 if (likeBtn) {
                     const isLiked = data.user_vote === "like";

@@ -85,10 +85,9 @@
             >
                 <i class="bi bi-hand-thumbs-up{% if user_vote == 'like' %}-fill{% endif %}"></i>
             </button>
-            <span id="score-post-{{ post.id }}"
-                  class="vcluster-score {% if post.score > 0 %}positive{% elif post.score < 0 %}negative{% endif %}">
-                {{ post.score }}
-            </span>
+            <span id="like-count-post-{{ post.id }}" class="vcluster-count like-count">{{ post.like_count }}</span>
+            <span class="vcluster-sep">·</span>
+            <span id="dislike-count-post-{{ post.id }}" class="vcluster-count dislike-count">{{ post.dislike_count }}</span>
             <button
                 class="vcluster-btn {% if user_vote == 'dislike' %}active-dislike{% endif %}"
                 id="dislike-btn-post-{{ post.id }}"
