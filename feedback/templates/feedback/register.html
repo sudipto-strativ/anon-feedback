@@ -1,161 +1,347 @@
 {% extends "feedback/base.html" %}
+{% load static %}
 
-{% block title %}Register — Strativ Voice{% endblock %}
+{% block title %}Create account — Strativ Voice{% endblock %}
 
 {% block extra_head %}
 <style>
-.auth-bg {
+.auth-shell {
     min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    padding: 40px 16px;
-    background:
-        radial-gradient(at 80% 10%, rgba(124,58,237,.45) 0px, transparent 55%),
-        radial-gradient(at 10% 5%,  rgba(244,63,94,.28) 0px, transparent 50%),
-        radial-gradient(at 95% 60%, rgba(107,33,168,.35) 0px, transparent 55%),
-        radial-gradient(at 5%  80%, rgba(59,130,246,.2)  0px, transparent 50%),
-        #0a0917;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--bg-canvas);
 }
 
-.auth-card {
-    background: rgba(255,255,255,.97);
-    border-radius: 20px;
-    box-shadow: 0 24px 80px rgba(0,0,0,.35);
-    border: 1px solid rgba(255,255,255,.25);
+.auth-left {
+    background: var(--bg-inverse);
+    color: #fff;
+    padding: 48px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
     overflow: hidden;
 }
 
-.auth-card-top {
-    height: 4px;
-    background: linear-gradient(90deg, #f43f5e, #7c3aed);
+.auth-left-logo {
+    width: 132px;
+    height: auto;
+    display: block;
 }
 
-.auth-input-group .input-group-text {
-    background: #f3f0ff;
-    border-color: #e8e4ff;
-    border-right: none;
+.auth-left-marker {
+    position: absolute;
+    right: -120px;
+    bottom: -80px;
+    width: 360px;
+    height: auto;
+    opacity: 0.08;
+    pointer-events: none;
 }
 
-.auth-input-group .form-control {
-    border-left: none;
-    border-color: #e8e4ff;
+.auth-left-headline {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+    color: #fff;
+    max-width: 440px;
 }
 
-.auth-input-group .form-control:focus {
-    border-left: none;
-    border-color: var(--violet) !important;
-    box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
+.auth-left-sub {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.72);
+    max-width: 460px;
+    margin-bottom: 36px;
+}
+
+.auth-left-points {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 460px;
+}
+.auth-left-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.5;
+}
+.auth-left-point i {
+    color: var(--accent);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.auth-left-foot {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.auth-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    background: var(--bg-canvas);
+}
+
+.auth-form-wrap {
+    width: 100%;
+    max-width: 380px;
+}
+
+.auth-eyebrow {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-tertiary);
+    margin-bottom: 16px;
+}
+.auth-eyebrow .num { color: var(--accent); font-variant-numeric: tabular-nums; }
+
+.auth-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.012em;
+    margin: 0 0 8px;
+}
+
+.auth-sub {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 28px;
+}
+
+.auth-field { margin-bottom: 16px; }
+.auth-field label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+.auth-field .hint {
+    font-weight: 400;
+    color: var(--text-tertiary);
+    margin-left: 4px;
+}
+.auth-input {
+    width: 100%;
+    height: 44px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.auth-input::placeholder { color: var(--text-tertiary); }
+.auth-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+.auth-input.is-invalid {
+    border-color: var(--error);
+}
+
+.auth-help {
+    font-size: 0.76rem;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    line-height: 1.5;
+}
+.auth-error {
+    font-size: 0.78rem;
+    color: var(--error);
+    margin-top: 6px;
+}
+
+.auth-cta {
+    width: 100%;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    margin-top: 12px;
+}
+.auth-cta:hover { background: var(--accent-hover); }
+.auth-cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.auth-divider {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: 28px 0 18px;
+}
+
+.auth-foot-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.auth-foot-text a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+.auth-foot-text a:hover { text-decoration: underline; }
+
+.auth-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--error-bg);
+    color: var(--error-fg);
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-size: 0.82rem;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 900px) {
+    .auth-shell { grid-template-columns: 1fr; }
+    .auth-left { display: none; }
+    .auth-right { padding: 56px 24px; }
 }
 </style>
 {% endblock %}
 
 {% block unauth_content %}
-<div class="auth-bg">
-    <div class="container" style="position:relative;z-index:1;">
-        <div class="row justify-content-center">
-            <div class="col-sm-10 col-md-6 col-lg-4">
-
-                <div class="text-center mb-4">
-                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-                         style="width:56px;height:56px;background:linear-gradient(135deg,#f43f5e,#fb7185);box-shadow:0 8px 24px rgba(244,63,94,.45);">
-                        <i class="bi bi-megaphone-fill text-white" style="font-size:1.4rem;"></i>
-                    </div>
-                    <h2 class="text-white fw-bold mb-1" style="font-size:1.5rem;">Strativ Voice</h2>
-                    <p class="small" style="color:rgba(255,255,255,.42);">Create your anonymous identity</p>
+<div class="auth-shell">
+    <aside class="auth-left">
+        <img src="{% static 'feedback/brand/symbol-orange.svg' %}" class="auth-left-marker" alt="" aria-hidden="true">
+        <div>
+            <img class="auth-left-logo" src="{% static 'feedback/brand/lockup-color-on-dark.svg' %}" alt="Strativ">
+        </div>
+        <div>
+            <h2 class="auth-left-headline">Pick a username. Stay anonymous.</h2>
+            <p class="auth-left-sub">
+                Your username is the only thing visible — your real identity is never tied
+                to a post. Pseudonyms are encouraged: pick something that's yours, not yours.
+            </p>
+            <div class="auth-left-points">
+                <div class="auth-left-point">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Posts &amp; comments show your username only, never your real name.</span>
                 </div>
-
-                <div class="auth-card">
-                    <div class="auth-card-top"></div>
-                    <div class="p-4">
-                        <h5 class="fw-bold mb-1 text-center" style="color:#111827;">Create Account</h5>
-                        <p class="text-center small mb-4" style="color:#6b7280;">Choose a username that keeps you anonymous.</p>
-
-                        {% if form.errors %}
-                        <div class="alert alert-danger py-2 small mb-3">
-                            <i class="bi bi-exclamation-circle me-1"></i>
-                            Please correct the errors below.
-                        </div>
-                        {% endif %}
-
-                        <form method="post">
-                            {% csrf_token %}
-
-                            <div class="mb-3">
-                                <label for="id_username" class="form-label small fw-semibold" style="color:#374151;">
-                                    Username <span class="fw-normal" style="color:#9ca3af;">(your public identity)</span>
-                                </label>
-                                <div class="input-group auth-input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-at" style="color:#7c3aed;"></i>
-                                    </span>
-                                    <input type="text" name="username" id="id_username"
-                                           class="form-control {% if form.username.errors %}is-invalid{% endif %}"
-                                           placeholder="e.g. anonymous_duck"
-                                           value="{{ form.username.value|default:'' }}"
-                                           autofocus required>
-                                </div>
-                                {% if form.username.errors %}
-                                <div class="invalid-feedback d-block small mt-1">
-                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
-                                </div>
-                                {% endif %}
-                                <div class="form-text" style="color:#9ca3af;">{{ form.username.help_text }}</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="id_password1" class="form-label small fw-semibold" style="color:#374151;">Password</label>
-                                <div class="input-group auth-input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-lock" style="color:#7c3aed;"></i>
-                                    </span>
-                                    <input type="password" name="password1" id="id_password1"
-                                           class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
-                                           placeholder="Choose a strong password" required>
-                                </div>
-                                {% if form.password1.errors %}
-                                <div class="invalid-feedback d-block small mt-1">
-                                    {% for error in form.password1.errors %}{{ error }}{% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="id_password2" class="form-label small fw-semibold" style="color:#374151;">Confirm Password</label>
-                                <div class="input-group auth-input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-lock-fill" style="color:#7c3aed;"></i>
-                                    </span>
-                                    <input type="password" name="password2" id="id_password2"
-                                           class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
-                                           placeholder="Repeat your password" required>
-                                </div>
-                                {% if form.password2.errors %}
-                                <div class="invalid-feedback d-block small mt-1">
-                                    {% for error in form.password2.errors %}{{ error }}{% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <button type="submit" class="btn w-100 py-2 fw-semibold text-white"
-                                    style="background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:10px;box-shadow:0 4px 16px rgba(124,58,237,.4);">
-                                <i class="bi bi-person-plus me-2"></i>Create Account
-                            </button>
-                        </form>
-
-                        <hr class="my-4" style="border-color:#f0eeff;">
-                        <p class="text-center small mb-0" style="color:#6b7280;">
-                            Already have an account?
-                            <a href="{% url 'login' %}" class="fw-semibold text-decoration-none" style="color:#7c3aed;">
-                                Sign in here
-                            </a>
-                        </p>
-                    </div>
+                <div class="auth-left-point">
+                    <i class="bi bi-chat-square-text"></i>
+                    <span>HR &amp; leadership see the same anonymous identity you do.</span>
                 </div>
-
-                <p class="text-center small mt-4" style="color:rgba(255,255,255,.25);">
-                    &copy; {% now "Y" %} Strativ AB
-                </p>
+                <div class="auth-left-point">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Status updates &amp; resolutions are shared back to the whole team.</span>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="auth-left-foot">&copy; {% now "Y" %} Strativ AB</div>
+    </aside>
+
+    <section class="auth-right">
+        <div class="auth-form-wrap">
+            <div class="auth-eyebrow">
+                <span class="num">01</span>
+                <span>—</span>
+                <span>Create account</span>
+            </div>
+            <h1 class="auth-title">Get set up.</h1>
+            <p class="auth-sub">Choose a username and password to start posting anonymously.</p>
+
+            {% if form.errors %}
+            <div class="auth-alert">
+                <i class="bi bi-exclamation-circle"></i>
+                Please correct the errors below.
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="auth-field">
+                    <label for="id_username">
+                        Username
+                        <span class="hint">(your public identity)</span>
+                    </label>
+                    <input type="text" name="username" id="id_username"
+                           class="auth-input {% if form.username.errors %}is-invalid{% endif %}"
+                           placeholder="e.g. anonymous_duck"
+                           value="{{ form.username.value|default:'' }}"
+                           autofocus required>
+                    {% if form.username.errors %}
+                    <div class="auth-error">
+                        {% for error in form.username.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if form.username.help_text %}
+                    <div class="auth-help">{{ form.username.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <label for="id_password1">Password</label>
+                    <input type="password" name="password1" id="id_password1"
+                           class="auth-input {% if form.password1.errors %}is-invalid{% endif %}"
+                           placeholder="Choose a strong password" required>
+                    {% if form.password1.errors %}
+                    <div class="auth-error">
+                        {% for error in form.password1.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field" style="margin-bottom: 8px;">
+                    <label for="id_password2">Confirm password</label>
+                    <input type="password" name="password2" id="id_password2"
+                           class="auth-input {% if form.password2.errors %}is-invalid{% endif %}"
+                           placeholder="Repeat your password" required>
+                    {% if form.password2.errors %}
+                    <div class="auth-error">
+                        {% for error in form.password2.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="auth-cta">
+                    Create account
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+
+            <hr class="auth-divider">
+            <p class="auth-foot-text">
+                Already have an account?
+                <a href="{% url 'login' %}">Sign in</a>
+            </p>
+        </div>
+    </section>
 </div>
 {% endblock %}

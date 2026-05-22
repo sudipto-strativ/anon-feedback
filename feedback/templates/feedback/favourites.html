@@ -6,11 +6,11 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-7 col-xl-6">
+    <div class="col-12 col-md-10 col-lg-8 col-xl-7">
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <span class="small fw-700 text-uppercase" style="letter-spacing:.07em; color:var(--t3);">
-                <i class="bi bi-bookmark-fill me-1" style="color:var(--s-amber);"></i> Saved Posts
+            <span class="section-title mb-0">
+                <span class="step-number">01</span><span class="step-dash">—</span>Saved Posts
             </span>
         </div>
 
@@ -19,15 +19,16 @@
                 {% include "feedback/partials/post_card.html" with truncate=True %}
             {% endfor %}
         {% else %}
-            <div class="text-center py-5">
-                <div style="font-size:3.5rem; margin-bottom:12px;">🔖</div>
-                <h5 class="fw-bold" style="color:var(--t1);">No saved posts yet</h5>
-                <p class="small mb-4" style="color:var(--t2);">
-                    Hit the <strong>Save</strong> button on any post in the feed to bookmark it here.
+            <div class="fb-card text-center" style="padding: 56px 24px;">
+                <div style="font-size: 2.4rem; color: var(--text-tertiary); margin-bottom: 14px;">
+                    <i class="bi bi-bookmark"></i>
+                </div>
+                <h2 style="font-size: 1.35rem; margin: 0 0 6px;">No saved posts yet.</h2>
+                <p style="color: var(--text-secondary); font-size: 0.92rem; margin: 0 0 24px;">
+                    Hit <strong style="color:var(--text-primary);">Save</strong> on any post in the feed to bookmark it here.
                 </p>
-                <a href="{% url 'feed' %}" class="btn px-5 fw-semibold text-white"
-                   style="background:linear-gradient(135deg,var(--violet),#a855f7);border:none;border-radius:10px;box-shadow:0 4px 14px rgba(124,58,237,.35);">
-                    <i class="bi bi-house-door me-2"></i>Go to Feed
+                <a href="{% url 'feed' %}" class="btn-strativ btn-primary">
+                    <i class="bi bi-house-door"></i> Go to feed
                 </a>
             </div>
         {% endif %}

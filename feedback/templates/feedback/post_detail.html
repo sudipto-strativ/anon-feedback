@@ -2,57 +2,98 @@
 {% load feedback_extras %}
 
 {% block title %}Feedback #{{ post.id }} — Strativ Voice{% endblock %}
-{% block page_title %}Feedback Detail{% endblock %}
+{% block page_title %}Feedback detail{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 <style>
 #comment-compose-editor .EasyMDEContainer .CodeMirror {
-    border: 1px solid var(--border);
-    border-radius: 0 0 10px 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: .855rem;
+    border: 1px solid var(--border-default);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
     line-height: 1.5;
-    padding: 6px 8px;
-    background: var(--bg);
-    color: var(--t1);
+    padding: 8px 10px;
+    background: var(--bg-subtle);
+    color: var(--text-primary);
     min-height: 60px;
 }
 #comment-compose-editor .EasyMDEContainer .editor-toolbar {
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-default);
     border-bottom: none;
-    border-radius: 10px 10px 0 0;
-    background: var(--bg);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    background: var(--bg-subtle);
     opacity: 1;
     padding: 2px 6px;
 }
 #comment-compose-editor .EasyMDEContainer .editor-toolbar button {
-    color: var(--t2) !important;
+    color: var(--text-secondary) !important;
     border-radius: 4px;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
 }
 #comment-compose-editor .EasyMDEContainer .editor-toolbar button:hover,
 #comment-compose-editor .EasyMDEContainer .editor-toolbar button.active {
-    background: var(--violet-light) !important;
-    color: var(--violet) !important;
+    background: var(--accent-subtle) !important;
+    color: var(--accent) !important;
     border-color: transparent !important;
 }
-#comment-compose-editor .EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border); }
+#comment-compose-editor .EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border-default); }
 #comment-compose-editor .EasyMDEContainer .CodeMirror-focused {
-    box-shadow: 0 0 0 3px var(--violet-glow);
-    border-color: var(--violet);
+    box-shadow: var(--focus-ring);
+    border-color: var(--accent);
 }
+
+.status-update-block {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+}
+.remark-block {
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 0 18px 16px;
+}
+.remark-block.done {
+    background: var(--success-bg);
+    border-left: 4px solid var(--success);
+}
+.remark-block.rejected {
+    background: var(--error-bg);
+    border-left: 4px solid var(--error);
+}
+.remark-block.in_progress {
+    background: var(--info-bg);
+    border-left: 4px solid var(--info);
+}
+.remark-block.pending {
+    background: var(--warning-bg);
+    border-left: 4px solid var(--warning);
+}
+.remark-title {
+    font-weight: 500;
+    font-size: 0.86rem;
+    margin: 0 0 4px;
+}
+.remark-block.done .remark-title { color: var(--success-fg); }
+.remark-block.rejected .remark-title { color: var(--error-fg); }
+.remark-block.in_progress .remark-title { color: var(--info-fg); }
+.remark-block.pending .remark-title { color: var(--warning-fg); }
+.remark-text { color: var(--text-primary); font-size: 0.88rem; line-height: 1.55; margin: 0; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-<div class="col-12 col-md-10 col-lg-7 col-xl-6">
+<div class="col-12 col-md-10 col-lg-8 col-xl-7">
 
-    <a href="{% url 'feed' %}" class="text-decoration-none small fw-semibold d-inline-flex align-items-center gap-1 mb-3"
-       style="color:var(--violet);">
-        <i class="bi bi-arrow-left"></i> Back to Feed
+    <a href="{% url 'feed' %}" class="text-decoration-none d-inline-flex align-items-center gap-1 mb-3"
+       style="color:var(--text-secondary); font-size:0.85rem; font-weight:500;">
+        <i class="bi bi-arrow-left"></i> Back to feed
     </a>
 
     <!-- POST CARD -->
@@ -67,20 +108,20 @@
                 <div class="fb-avatar-name">Anonymous</div>
                 <div class="fb-avatar-time d-flex align-items-center gap-2">
                     <span>{{ post.created_at|timesince_short }}</span>
-                    <span style="color:#d1d5db;">·</span>
+                    <span style="color:var(--border-strong);">·</span>
                     {% if post.target_role %}
-                    <span style="display:inline-flex;align-items:center;gap:3px;font-size:.65rem;color:#7c3aed;background:#ede9fe;padding:1px 6px;border-radius:6px;font-weight:600;">
-                        <i class="bi bi-lock-fill"></i> {{ post.get_target_role_display }} Only
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--accent-pressed);background:var(--accent-subtle);padding:2px 8px;border-radius:9999px;font-weight:500;">
+                        <i class="bi bi-lock-fill"></i> {{ post.get_target_role_display }} only
                     </span>
                     {% else %}
-                    <i class="bi bi-globe2" style="font-size:.65rem; color:var(--t3);"></i>
+                    <span style="font-size:0.7rem; color:var(--text-tertiary);"><i class="bi bi-globe2"></i> Everyone</span>
                     {% endif %}
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 {% if post.eta %}
                 <span class="post-meta d-flex align-items-center gap-1"
-                      style="background:var(--bg); border:1px solid var(--border); padding:3px 9px; border-radius:8px;">
+                      style="background:var(--bg-subtle); border:1px solid var(--border-default); padding:3px 10px; border-radius:9999px;">
                     <i class="bi bi-calendar3"></i> {{ post.eta|date:"M d, Y" }}
                 </span>
                 {% endif %}
@@ -96,19 +137,19 @@
 
         <!-- Full content -->
         <div class="fb-card-body">
-            <div class="md-content" style="font-size:.95rem;">{{ post.content|render_markdown }}</div>
+            <div class="md-content" style="font-size:0.98rem;">{{ post.content|render_markdown }}</div>
         </div>
 
         <!-- Attachments -->
         {% with attachments=post.attachments.all %}
         {% if attachments %}
-        <div class="px-3 pb-3" style="padding-left:20px!important;">
+        <div style="padding: 0 22px 14px;">
             <div class="d-flex flex-wrap gap-2 mb-2">
                 {% for att in attachments %}
                     {% if att.is_image %}
                     <a href="{{ att.file.url }}" target="_blank" rel="noopener">
                         <img src="{{ att.file.url }}" alt="{{ att.filename }}"
-                             style="max-height:200px; max-width:100%; border-radius:10px; object-fit:cover; border:1px solid var(--border); cursor:zoom-in;">
+                             style="max-height:220px; max-width:100%; border-radius:var(--radius-md); object-fit:cover; border:1px solid var(--border-default); cursor:zoom-in;">
                     </a>
                     {% endif %}
                 {% endfor %}
@@ -116,11 +157,11 @@
             {% for att in attachments %}
                 {% if not att.is_image %}
                 <a href="{{ att.file.url }}" target="_blank" rel="noopener"
-                   class="d-inline-flex align-items-center gap-2 px-3 py-2 me-2 mb-1 rounded-2 text-decoration-none small fw-semibold"
-                   style="background:var(--bg); border:1px solid var(--border); color:var(--t1);">
+                   class="d-inline-flex align-items-center gap-2 me-2 mb-1 text-decoration-none"
+                   style="background:var(--bg-subtle); border:1px solid var(--border-default); color:var(--text-primary); padding:8px 14px; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:500;">
                     <i class="bi {{ att.icon_class }}" style="color:{{ att.icon_color }}; font-size:1.1rem;"></i>
                     {{ att.filename }}
-                    <i class="bi bi-download ms-1" style="color:var(--t3); font-size:.75rem;"></i>
+                    <i class="bi bi-download ms-1" style="color:var(--text-tertiary); font-size:0.78rem;"></i>
                 </a>
                 {% endif %}
             {% endfor %}
@@ -130,17 +171,13 @@
 
         <!-- Remark -->
         {% if post.remark %}
-        <div class="mx-3 mb-3 p-3 rounded-3 d-flex gap-3"
-             style="background:{% if post.status == 'done' %}#f0fdf4{% else %}#fff5f5{% endif %};
-                    border-left:4px solid {% if post.status == 'done' %}#10b981{% else %}#ef4444{% endif %};">
-            <i class="bi bi-chat-left-quote-fill mt-1 flex-shrink-0"
-               style="color:{% if post.status == 'done' %}#10b981{% elif post.status == 'rejected' %}#ef4444{% else %}#3b82f6{% endif %};"></i>
+        <div class="remark-block {{ post.status }}">
+            <i class="bi bi-chat-left-quote-fill" style="color:{% if post.status == 'done' %}var(--success){% elif post.status == 'rejected' %}var(--error){% elif post.status == 'in_progress' %}var(--info){% else %}var(--warning){% endif %}; margin-top:1px; flex-shrink:0;"></i>
             <div>
-                <div class="fw-semibold small mb-1"
-                     style="color:{% if post.status == 'done' %}#064e3b{% elif post.status == 'rejected' %}#7f1d1d{% else %}#1e3a5f{% endif %};">
-                    {% if post.status == 'done' %}Resolution Summary{% elif post.status == 'rejected' %}Rejection Reason{% else %}Feedback{% endif %}
-                </div>
-                <p class="mb-0 small" style="color:#374151; line-height:1.6;">{{ post.remark }}</p>
+                <p class="remark-title">
+                    {% if post.status == 'done' %}Resolution summary{% elif post.status == 'rejected' %}Rejection reason{% else %}Note{% endif %}
+                </p>
+                <p class="remark-text">{{ post.remark }}</p>
             </div>
         </div>
         {% endif %}
@@ -152,15 +189,15 @@
                 {% if post.like_count or post.dislike_count %}
                 <div class="d-flex align-items-center gap-2">
                     {% if post.like_count %}
-                    <span class="d-flex align-items-center gap-1" style="font-size:.8rem; font-weight:600; color:var(--violet);">
+                    <span class="d-flex align-items-center gap-1" style="font-size:0.8rem; font-weight:600; color:var(--accent);">
                         <i class="bi bi-hand-thumbs-up-fill"></i> {{ post.like_count }}
                     </span>
                     {% endif %}
                     {% if post.like_count and post.dislike_count %}
-                    <span style="color:var(--border);">·</span>
+                    <span style="color:var(--border-strong);">·</span>
                     {% endif %}
                     {% if post.dislike_count %}
-                    <span class="d-flex align-items-center gap-1" style="font-size:.8rem; font-weight:600; color:var(--s-red);">
+                    <span class="d-flex align-items-center gap-1" style="font-size:0.8rem; font-weight:600; color:var(--error);">
                         <i class="bi bi-hand-thumbs-down-fill"></i> {{ post.dislike_count }}
                     </span>
                     {% endif %}
@@ -168,7 +205,7 @@
                 {% endif %}
             </div>
             {% if post.comment_count %}
-            <span style="color:var(--t2);">{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
+            <span style="color:var(--text-secondary);">{{ post.comment_count }} comment{{ post.comment_count|pluralize }}</span>
             {% endif %}
         </div>
         {% endif %}
@@ -208,11 +245,10 @@
 
         <!-- Status update form (CEO/HR only) -->
         {% if can_update_status %}
-        <div class="mx-3 mb-3 mt-1 p-3 rounded-3"
-             style="background:linear-gradient(135deg,var(--bg),var(--violet-light)); border:1px solid var(--border);">
+        <div class="status-update-block" style="margin: 4px 18px 18px;">
             <div class="d-flex align-items-center gap-2 mb-3">
-                <i class="bi bi-pencil-square" style="color:var(--violet);"></i>
-                <span class="fw-bold small" style="color:#4c1d95;">Update Status</span>
+                <i class="bi bi-pencil-square" style="color:var(--accent);"></i>
+                <span style="font-weight:500; font-size:0.92rem; color:var(--text-primary);">Update status</span>
                 <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% elif request.user.profile.role == 'admin' %}role-badge-admin{% else %}role-badge-ceo{% endif %}">
                     {{ request.user.profile.role_display }}
                 </span>
@@ -221,31 +257,30 @@
                 {% csrf_token %}
                 <div class="row g-2 mb-2">
                     <div class="col-sm-6">
-                        <label class="form-label small fw-semibold mb-1" style="color:var(--t1);">Status</label>
+                        <label class="form-label">Status</label>
                         {{ status_form.status }}
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label small fw-semibold mb-1" style="color:var(--t1);">ETA</label>
+                        <label class="form-label">ETA</label>
                         {{ status_form.eta }}
                     </div>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1" style="color:var(--t1);">
+                <div class="mb-3">
+                    <label class="form-label">
                         Remark
-                        <span style="color:var(--s-red);" id="remark-required-indicator" style="display:none;">*</span>
-                        <span class="fw-normal" style="color:var(--t3);">(required for Done / Rejected)</span>
+                        <span style="color:var(--error);" id="remark-required-indicator">*</span>
+                        <span style="font-weight:400; color:var(--text-tertiary); font-size:0.78rem;">(required for done / rejected)</span>
                     </label>
                     {{ status_form.remark }}
                     {% if status_form.remark.errors %}
-                    <div class="text-danger small mt-1">
+                    <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
                         {% for error in status_form.remark.errors %}{{ error }}{% endfor %}
                     </div>
                     {% endif %}
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn fw-semibold text-white px-4"
-                            style="background:linear-gradient(135deg,var(--violet),#a855f7);border:none;border-radius:8px;box-shadow:0 3px 10px rgba(124,58,237,.3);">
-                        <i class="bi bi-check-lg me-1"></i>Save
+                    <button type="submit" class="btn-strativ btn-primary">
+                        <i class="bi bi-check-lg"></i> Save
                     </button>
                 </div>
             </form>
@@ -256,17 +291,16 @@
 
     <!-- COMMENTS CARD -->
     <div class="fb-card">
-        <div class="fb-card-status-bar" style="background:linear-gradient(to bottom, var(--violet), #a855f7);"></div>
-        <div class="p-3 pb-0" style="padding-left:20px!important;">
-            <span class="fw-bold" style="color:var(--t1); font-size:.95rem;">
-                Comments
+        <div style="padding: 18px 22px 0;">
+            <span class="section-title">
+                <span class="step-number">02</span><span class="step-dash">—</span>Comments
                 {% if post.comment_count %}
-                <span style="color:var(--t3); font-weight:400; font-size:.85rem;">· {{ post.comment_count }}</span>
+                <span style="color:var(--text-tertiary); font-weight:400; margin-left:6px;">{{ post.comment_count }}</span>
                 {% endif %}
             </span>
         </div>
 
-        <div class="p-3" style="padding-left:20px!important;">
+        <div style="padding: 4px 22px 18px;">
 
             {% if comments %}
                 {% for comment in comments %}
@@ -274,14 +308,14 @@
                 {% endfor %}
             {% else %}
                 <div class="text-center py-4">
-                    <div style="font-size:2.2rem;">💭</div>
-                    <p class="small mt-2 mb-0" style="color:var(--t2);">No comments yet — start the conversation!</p>
+                    <div style="font-size:1.8rem; color:var(--text-tertiary);"><i class="bi bi-chat-square-dots"></i></div>
+                    <p style="font-size:0.88rem; color:var(--text-secondary); margin:8px 0 0;">No comments yet — start the conversation.</p>
                 </div>
             {% endif %}
 
             <!-- Comment compose -->
-            <div class="d-flex gap-2 align-items-start mt-3 pt-3" style="border-top:1px solid var(--border-soft);">
-                <div class="compose-avatar flex-shrink-0" style="width:34px;height:34px;font-size:.78rem;">
+            <div class="d-flex gap-2 align-items-start mt-3 pt-3" style="border-top:1px solid var(--border-subtle);">
+                <div class="compose-avatar flex-shrink-0" style="width:36px;height:36px;font-size:0.8rem;">
                     {{ request.user.username|slice:":1"|upper }}
                 </div>
                 <form method="post" enctype="multipart/form-data" class="flex-grow-1">
@@ -289,34 +323,33 @@
                     <div id="comment-compose-editor">
                         <textarea id="comment-input" name="content"></textarea>
                         {% if comment_form.content.errors %}
-                        <div class="text-danger small mt-1">
+                        <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
                             {% for error in comment_form.content.errors %}{{ error }}{% endfor %}
                         </div>
                         {% endif %}
                         {% if comment_form.non_field_errors %}
-                        <div class="text-danger small mt-1">
+                        <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
                             {% for error in comment_form.non_field_errors %}{{ error }}{% endfor %}
                         </div>
                         {% endif %}
                     </div>
                     <!-- Image attachment -->
                     <div class="mt-2">
-                        <label class="d-flex align-items-center gap-1 small mb-1" style="color:var(--t3); cursor:pointer;">
-                            <i class="bi bi-image" style="color:var(--violet);"></i>
-                            Attach image <span class="fw-normal">(optional, max 5 MB)</span>
+                        <label class="d-flex align-items-center gap-1" style="font-size:0.8rem; color:var(--text-tertiary); cursor:pointer; margin-bottom:6px;">
+                            <i class="bi bi-image" style="color:var(--accent);"></i>
+                            Attach image <span style="font-weight:400;">(optional, max 5 MB)</span>
                         </label>
                         {{ comment_form.image }}
                         {% if comment_form.image.errors %}
-                        <div class="text-danger small mt-1">
+                        <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
                             {% for error in comment_form.image.errors %}{{ error }}{% endfor %}
                         </div>
                         {% endif %}
                         <div id="comment-image-preview" class="mt-2"></div>
                     </div>
                     <div class="d-flex justify-content-end mt-2">
-                        <button type="submit" id="comment-submit-btn" class="btn btn-sm fw-semibold text-white px-4"
-                                style="background:linear-gradient(135deg,var(--rose),#fb7185);border:none;border-radius:20px;box-shadow:0 3px 8px var(--rose-glow);">
-                            <i class="bi bi-send-fill me-1"></i>Post
+                        <button type="submit" id="comment-submit-btn" class="btn-strativ btn-primary" style="height:36px; padding:0 18px;">
+                            <i class="bi bi-send"></i> Post
                         </button>
                     </div>
                 </form>
@@ -375,7 +408,7 @@ if (commentImageInput) {
         if (this.files && this.files[0]) {
             const img = document.createElement('img');
             img.src = URL.createObjectURL(this.files[0]);
-            img.style.cssText = 'max-height:120px; max-width:100%; border-radius:8px; border:1px solid var(--border);';
+            img.style.cssText = 'max-height:140px; max-width:100%; border-radius:var(--radius-sm); border:1px solid var(--border-default);';
             preview.appendChild(img);
         }
     });
