@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -57,7 +58,12 @@ class Post(models.Model):
         ('done', 'Done'),
         ('rejected', 'Rejected'),
     ]
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    # No author FK — this is the structural change that makes "anonymous"
+    # actually anonymous at the database layer. Authorship is no longer
+    # stored. Notification routing happens via the Subscription model, which
+    # is an interest graph (many subscribers per post), not an ownership
+    # link. See docs in feedback/models.py:Subscription.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     content = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     target_role = models.CharField(
@@ -77,7 +83,7 @@ class Post(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Post by {self.author.username} at {self.created_at:%Y-%m-%d}"
+        return f"Post #{self.id} at {self.created_at:%Y-%m-%d}"
 
     @property
     def like_count(self):
@@ -107,7 +113,17 @@ class Post(models.Model):
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    # No author FK. The role at the time of commenting is captured as a snapshot
+    # so templates and Slack can show "HR commented" / "CEO commented" without
+    # storing who. If a user changes role later, old comments keep their
+    # original role label — intentional, that's the role at the moment of
+    # speaking.
+    role = models.CharField(
+        max_length=20,
+        choices=UserProfile.ROLE_CHOICES,
+        default='employee',
+        help_text='Snapshot of commenter role at post time. No user FK is stored.',
+    )
     content = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -115,7 +131,11 @@ class Comment(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"Comment by {self.author.username} on Post #{self.post.id}"
+        return f"Comment #{self.id} on Post #{self.post.id}"
+
+    @property
+    def role_display(self):
+        return dict(UserProfile.ROLE_CHOICES).get(self.role, 'Member')
 
     @property
     def like_count(self):
@@ -144,6 +164,33 @@ class Favourite(models.Model):
         return f"{self.user.username} → Post #{self.post.id}"
 
 
+class Subscription(models.Model):
+    """Interest graph for notifications, replacing the dropped Post/Comment
+    author FK as the routing mechanism.
+
+    A row says "this user wants notifications about this post." A user
+    auto-subscribes when they create a post, comment, or favourite it. The
+    first subscriber on a freshly-created post will usually be the author,
+    so this table still leaks a *soft* authorship signal — but it's an
+    interest signal (many users can subscribe to the same post), not the
+    deterministic key the old FK was.
+
+    No `created_at` field on purpose: ordering by creation would re-leak
+    the authorship signal we just dropped. Rows are unordered facts.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='subscribers')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'post'], name='unique_subscription'),
+        ]
+        indexes = [models.Index(fields=['post'])]
+
+    def __str__(self):
+        return f"sub: user={self.user_id} post={self.post_id}"
+
+
 class PostAttachment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='attachments')
     file = models.FileField(upload_to='post_attachments/%Y/%m/')
@@ -155,6 +202,17 @@ class PostAttachment(models.Model):
     @property
     def filename(self):
         return os.path.basename(self.file.name)
+
+    @property
+    def display_name(self):
+        """Neutral label shown in templates.
+
+        Stored filenames are random tokens (see `utils/uploads.py`), so
+        showing them in the UI would expose nothing identifying — but a
+        clean "attachment.pdf" reads better and avoids confusing
+        readers with opaque base64-ish strings.
+        """
+        return f"attachment{self.extension}"
 
     @property
     def extension(self):
