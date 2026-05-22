@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Post, Comment, UserProfile
+from .utils.uploads import sanitise_upload
 
 
 class MarkdownTextarea(forms.Textarea):
@@ -81,12 +82,13 @@ class PostForm(forms.ModelForm):
         return self.cleaned_data['target_role'] or None
 
     def clean_attachments(self):
-        # request.FILES.getlist returns a list; Django's FileField with multiple
-        # input only gives the last file via cleaned_data, so we read from raw
-        # files in the view. This clean method validates the single value Django
-        # passes here (last selected file) to surface errors early; the view
-        # iterates all files itself.
+        # Two passes per file:
+        #   1. Surface-level validation (extension + size).
+        #   2. Re-encode through `sanitise_upload` to drop original
+        #      filenames and embedded metadata before storage. The
+        #      sanitised ContentFile is what eventually hits MEDIA_ROOT.
         files = self.files.getlist('attachments')
+        cleaned = []
         for f in files:
             ext = os.path.splitext(f.name)[1].lower()
             if ext not in ALLOWED_ATTACHMENT_EXTENSIONS:
@@ -98,7 +100,8 @@ class PostForm(forms.ModelForm):
                 raise forms.ValidationError(
                     f'"{f.name}" exceeds the 10 MB limit.'
                 )
-        return files
+            cleaned.append(sanitise_upload(f))
+        return cleaned
 
 
 class CommentForm(forms.ModelForm):
@@ -134,9 +137,13 @@ class CommentForm(forms.ModelForm):
 
     def clean_image(self):
         image = self.cleaned_data.get('image')
-        if image and image.size > MAX_IMAGE_SIZE:
+        if not image:
+            return image
+        if image.size > MAX_IMAGE_SIZE:
             raise forms.ValidationError('Image must be under 5 MB.')
-        return image
+        # Re-encode to drop EXIF (incl. GPS coords) and rename to a
+        # random token.
+        return sanitise_upload(image)
 
 
 class StatusUpdateForm(forms.ModelForm):

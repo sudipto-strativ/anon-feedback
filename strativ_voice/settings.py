@@ -5,6 +5,8 @@ Django settings for strativ_voice project.
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Load .env file if present
 try:
     from dotenv import load_dotenv
@@ -15,14 +17,20 @@ except ImportError:
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-strativ-voice-default-secret-key-change-in-production'
-)
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG and SECRET_KEY are env-driven. The defaults are dev-friendly
+# (DEBUG=True, insecure dev key) but the moment DEBUG is off we refuse
+# to start without a real SECRET_KEY — otherwise a misconfigured
+# deployment would silently accept the placeholder and expose Post
+# content via traceback pages.
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+
+_DEV_SECRET_KEY = 'django-insecure-strativ-voice-default-secret-key-change-in-production'
+SECRET_KEY = os.environ.get('SECRET_KEY', _DEV_SECRET_KEY)
+if not DEBUG and SECRET_KEY == _DEV_SECRET_KEY:
+    raise ImproperlyConfigured(
+        "SECRET_KEY must be set via the environment when DEBUG is off. "
+        "Refusing to start with the development placeholder."
+    )
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
@@ -124,9 +132,25 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-# Session expires after 24 hours
+# Session expires after 24 hours.
 SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = True
+
+# Cookie / transport hardening. Defaults are paired with `DEBUG`: locally
+# we keep cookies unrestricted so the dev server works without HTTPS;
+# in production these flip on automatically. `SAMESITE=Lax` mitigates
+# CSRF on the in-app voting/favourite endpoints.
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # forms read the cookie via JS
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Trust X-Forwarded-Proto from the reverse proxy in production so
+# `request.is_secure()` is correct and secure cookies actually attach.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Email — SendGrid SMTP relay
 # Set EMAIL_BACKEND to the SMTP backend in production.
