@@ -1588,7 +1588,7 @@
                             <div class="notif-list" id="notif-list">
                                 {% if recent_notifications %}
                                 {% for n in recent_notifications %}
-                                <a href="{% url 'post_detail' n.post.id %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+                                <a href="{% url 'post_detail' n.post.public_id %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
                                     <div class="notif-item-icon">
                                         {% if n.notification_type == 'status_update' %}
                                         <i class="bi bi-pencil-square"></i>
@@ -1599,7 +1599,7 @@
                                     <div class="notif-item-body">
                                         {% if n.notification_type == 'status_update' %}
                                         <div class="notif-item-text">
-                                            <strong>Feedback #{{ n.post.id }}</strong> status updated to
+                                            <strong>Feedback</strong> status updated to
                                             <span class="status-pill {{ n.post.status }}" style="font-size:.68rem;padding:1px 7px;">{{ n.post.get_status_display }}</span>
                                         </div>
                                         {% if n.post.remark %}
@@ -1607,13 +1607,13 @@
                                         {% endif %}
                                         {% else %}
                                         <div class="notif-item-text">
-                                            <span class="role-badge role-badge-{{ n.comment.author.profile.role }}">
-                                                {% if n.comment.author.profile.role == 'hr' %}HR
-                                                {% elif n.comment.author.profile.role == 'ceo' %}CEO
-                                                {% elif n.comment.author.profile.role == 'admin' %}Admin
+                                            <span class="role-badge role-badge-{{ n.comment.role }}">
+                                                {% if n.comment.role == 'hr' %}HR
+                                                {% elif n.comment.role == 'ceo' %}CEO
+                                                {% elif n.comment.role == 'admin' %}Admin
                                                 {% else %}Member{% endif %}
                                             </span>
-                                            commented on <strong>Feedback #{{ n.post.id }}</strong>
+                                            commented on <strong>Feedback</strong>
                                         </div>
                                         {% if n.comment.content %}
                                         <div class="notif-item-preview">{{ n.comment.content|truncatechars:60 }}</div>
@@ -1700,6 +1700,10 @@
                     : "";
             }
 
+            // postId is now the post's UUID public_id (string), routed by
+            // strativ_voice/urls.py. DOM IDs (`like-btn-post-<uuid>` etc.)
+            // are keyed off the same value so updateVoteUI keeps finding
+            // the right elements.
             function votePost(postId, voteType) {
                 fetch(`/post/${postId}/vote/`, {
                     method: "POST",

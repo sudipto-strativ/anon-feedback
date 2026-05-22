@@ -1,6 +1,6 @@
 {% load feedback_extras %}
 {% with user_vote=comment_vote_map|get_item:comment.id %}
-{% with role=comment.author.profile.role %}
+{% with role=comment.role %}{# snapshot stored on Comment.role; no author FK is queried #}
 
 <div class="fb-comment">
 

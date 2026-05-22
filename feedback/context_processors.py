@@ -13,7 +13,10 @@ def sidebar_stats(request):
         recent_notifications = list(
             Notification.objects
             .filter(recipient=request.user)
-            .select_related('post', 'comment', 'comment__author__profile')
+            # No `comment__author` join: Comment dropped its author FK as
+            # part of the anonymity hardening. Templates read `comment.role`
+            # directly off the row.
+            .select_related('post', 'comment')
             .order_by('-created_at')[:8]
         )
         return {

@@ -1,7 +1,7 @@
 {% extends "feedback/base.html" %}
 {% load feedback_extras %}
 
-{% block title %}Feedback #{{ post.id }} — Strativ Voice{% endblock %}
+{% block title %}Feedback — Strativ Voice{% endblock %}
 {% block page_title %}Feedback detail{% endblock %}
 
 {% block extra_head %}
@@ -160,7 +160,7 @@
                    class="d-inline-flex align-items-center gap-2 me-2 mb-1 text-decoration-none"
                    style="background:var(--bg-subtle); border:1px solid var(--border-default); color:var(--text-primary); padding:8px 14px; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:500;">
                     <i class="bi {{ att.icon_class }}" style="color:{{ att.icon_color }}; font-size:1.1rem;"></i>
-                    {{ att.filename }}
+                    {{ att.display_name }}
                     <i class="bi bi-download ms-1" style="color:var(--text-tertiary); font-size:0.78rem;"></i>
                 </a>
                 {% endif %}
@@ -217,19 +217,19 @@
             <div class="vote-cluster">
                 <button
                     class="vcluster-btn {% if user_post_vote == 'like' %}active-like{% endif %}"
-                    id="like-btn-post-{{ post.id }}"
-                    onclick="votePost({{ post.id }}, 'like')"
+                    id="like-btn-post-{{ post.public_id }}"
+                    onclick="votePost('{{ post.public_id }}', 'like')"
                     title="Upvote"
                 >
                     <i class="bi bi-hand-thumbs-up{% if user_post_vote == 'like' %}-fill{% endif %}"></i>
                 </button>
-                <span id="like-count-post-{{ post.id }}" class="vcluster-count like-count">{{ post.like_count }}</span>
+                <span id="like-count-post-{{ post.public_id }}" class="vcluster-count like-count">{{ post.like_count }}</span>
                 <span class="vcluster-sep">·</span>
-                <span id="dislike-count-post-{{ post.id }}" class="vcluster-count dislike-count">{{ post.dislike_count }}</span>
+                <span id="dislike-count-post-{{ post.public_id }}" class="vcluster-count dislike-count">{{ post.dislike_count }}</span>
                 <button
                     class="vcluster-btn {% if user_post_vote == 'dislike' %}active-dislike{% endif %}"
-                    id="dislike-btn-post-{{ post.id }}"
-                    onclick="votePost({{ post.id }}, 'dislike')"
+                    id="dislike-btn-post-{{ post.public_id }}"
+                    onclick="votePost('{{ post.public_id }}', 'dislike')"
                     title="Downvote"
                 >
                     <i class="bi bi-hand-thumbs-down{% if user_post_vote == 'dislike' %}-fill{% endif %}"></i>
@@ -253,7 +253,7 @@
                     {{ request.user.profile.role_display }}
                 </span>
             </div>
-            <form method="post" action="{% url 'update_status' post.id %}">
+            <form method="post" action="{% url 'update_status' post.public_id %}">
                 {% csrf_token %}
                 <div class="row g-2 mb-2">
                     <div class="col-sm-6">

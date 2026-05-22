@@ -1,9 +1,29 @@
-import requests
+"""Strativ Voice notifications.
+
+This module fans out to three channels: Slack (webhook), email
+(`NotificationEmail` admin list), and in-app `Notification` rows.
+
+After the anonymity hardening:
+
+- Slack messages no longer carry a role badge for comments
+  (`HR / CEO / Admin / Member`). With rare roles, that badge was an
+  instant deanonymiser.
+- URLs in Slack and email subject lines use `post.public_id` (UUID),
+  not the sequential `post.id` — so externally we can't enumerate.
+- In-app notifications are routed via `Subscription` instead of the
+  dropped `Post.author` / `Comment.author` FKs. Anyone who has shown
+  interest in a post (created it, commented on it, favourited it) gets
+  notified about subsequent activity.
+"""
+
 import logging
+
+import requests
 from django.conf import settings
 from django.core.mail import send_mail
 from django.urls import reverse
-from .models import Comment, Notification, NotificationEmail, SlackConfig
+
+from .models import Notification, NotificationEmail, SlackConfig, Subscription
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +32,6 @@ def send_slack_message(text):
     """Send a message to Slack via webhook."""
     config = SlackConfig.objects.filter(is_active=True).first()
     if not config:
-        # Fall back to settings-level webhook URL if configured
         webhook_url = getattr(settings, 'SLACK_WEBHOOK_URL', '')
         if not webhook_url:
             return
@@ -32,9 +51,9 @@ def send_slack_message(text):
 
 
 def _post_url(post):
-    """Return the absolute URL for a post detail page."""
+    """Absolute URL for a post detail page, routed by public_id (UUID)."""
     site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000').rstrip('/')
-    return site_url + reverse('post_detail', args=[post.id])
+    return site_url + reverse('post_detail', args=[post.public_id])
 
 
 def notify_new_post(post):
@@ -76,18 +95,19 @@ def notify_new_post(post):
 
 
 def notify_new_comment(comment):
-    """Notify about a new comment via Slack (public posts only) and email."""
+    """Notify about a new comment via Slack (public posts only) and email.
+
+    The Slack message deliberately omits the commenter's role: for rare
+    roles like CEO that was an instant deanonymiser. Internal app users
+    still see the role badge in the UI (where the audience is bounded by
+    `target_role` already).
+    """
     post = comment.post
     url = _post_url(post)
 
-    try:
-        role_display = comment.author.profile.role_display
-    except Exception:
-        role_display = 'Member'
-
     if not post.target_role:
         msg = (
-            f":speech_balloon: *<{url}|New Comment>* · _{role_display}_\n"
+            f":speech_balloon: *<{url}|New comment on feedback>*\n"
             f">{comment.content[:200]}"
         )
         send_slack_message(msg)
@@ -105,9 +125,9 @@ def notify_new_comment(comment):
     if emails:
         try:
             send_mail(
-                subject=f"New Comment on Feedback #{post.id} — Strativ Voice",
+                subject=f"New comment on feedback — Strativ Voice",
                 message=(
-                    f"A new comment has been added to Feedback #{post.id}.\n\n"
+                    f"A new comment has been added to a feedback post.\n\n"
                     f"Comment:\n{comment.content}\n\n"
                     f"View the full thread here:\n{url}"
                 ),
@@ -119,40 +139,49 @@ def notify_new_comment(comment):
             logger.error(f"Email notification failed for comment: {e}")
 
 
-def create_status_notification(post):
-    """Notify the post author when status, ETA, or remark is updated."""
-    Notification.objects.create(
-        recipient=post.author,
-        post=post,
-        notification_type=Notification.TYPE_STATUS,
+def create_status_notification(post, actor=None):
+    """Notify every subscriber of `post` that the status changed.
+
+    Pre-rework this notified only `post.author`. The Subscription table
+    means anyone with prior interest in the post (poster, commenters,
+    favouriters) hears about the resolution — a small UX upgrade.
+
+    `actor` is the HR/CEO user who triggered the update; we exclude them
+    from the recipients so they don't notify themselves.
+    """
+    subscriber_ids = Subscription.objects.filter(post=post).values_list(
+        'user_id', flat=True
     )
+    if actor is not None:
+        subscriber_ids = subscriber_ids.exclude(user_id=actor.pk)
+
+    Notification.objects.bulk_create([
+        Notification(
+            recipient_id=uid,
+            post=post,
+            notification_type=Notification.TYPE_STATUS,
+        )
+        for uid in subscriber_ids
+    ])
 
 
-def create_comment_notifications(comment):
+def create_comment_notifications(comment, actor=None):
     """Create in-app notifications for a new comment.
 
-    Notifies the post author and anyone who has previously commented on the
-    same post, excluding the person who just posted the comment.
+    Recipients are every subscriber of the post except the actor who
+    just commented.
     """
     post = comment.post
-    commenter_id = comment.author_id
-
-    recipient_ids = set()
-    recipient_ids.add(post.author_id)
-    prior_ids = (
-        Comment.objects
-        .filter(post=post)
-        .exclude(pk=comment.pk)
-        .values_list('author_id', flat=True)
-        .distinct()
+    subscriber_ids = list(
+        Subscription.objects.filter(post=post).values_list('user_id', flat=True)
     )
-    recipient_ids.update(prior_ids)
-    recipient_ids.discard(commenter_id)
+    if actor is not None:
+        subscriber_ids = [uid for uid in subscriber_ids if uid != actor.pk]
 
-    if recipient_ids:
+    if subscriber_ids:
         Notification.objects.bulk_create([
             Notification(recipient_id=uid, post=post, comment=comment)
-            for uid in recipient_ids
+            for uid in subscriber_ids
         ])
 
 
@@ -169,7 +198,7 @@ def notify_status_update(post, updated_by):
         preview = post.content[:150]
 
     msg = (
-        f":pencil2: *<{url}|Feedback #{post.id}>* status updated to *{post.get_status_display()}*{eta_str}\n"
+        f":pencil2: *<{url}|Feedback>* status updated to *{post.get_status_display()}*{eta_str}\n"
         f">{preview}"
     )
     send_slack_message(msg)
