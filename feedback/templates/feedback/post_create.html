@@ -1,136 +1,175 @@
 {% extends "feedback/base.html" %}
 
-{% block title %}New Feedback — Strativ Voice{% endblock %}
-{% block page_title %}Post Feedback{% endblock %}
+{% block title %}New feedback — Strativ Voice{% endblock %}
+{% block page_title %}New feedback{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 <style>
 .EasyMDEContainer .CodeMirror {
-    border: 1px solid var(--border);
-    border-radius: 0 0 10px 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: .9rem;
+    border: 1px solid var(--border-default);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
     line-height: 1.7;
-    padding: 10px 4px;
-    background: #fff;
-    color: var(--t1);
-    min-height: 160px;
+    padding: 12px 6px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    min-height: 180px;
 }
 .EasyMDEContainer .editor-toolbar {
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-default);
     border-bottom: none;
-    border-radius: 10px 10px 0 0;
-    background: var(--bg);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    background: var(--bg-subtle);
     opacity: 1;
 }
 .EasyMDEContainer .editor-toolbar button {
-    color: var(--t2) !important;
+    color: var(--text-secondary) !important;
     border-radius: 6px;
 }
 .EasyMDEContainer .editor-toolbar button:hover,
 .EasyMDEContainer .editor-toolbar button.active {
-    background: var(--violet-light) !important;
-    color: var(--violet) !important;
+    background: var(--accent-subtle) !important;
+    color: var(--accent) !important;
     border-color: transparent !important;
 }
-.EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border); }
-.EasyMDEContainer .CodeMirror-focused { box-shadow: 0 0 0 3px var(--violet-glow); }
-.editor-preview, .editor-preview-side {
-    background: #fff; font-family: 'Inter', sans-serif;
-    font-size: .9rem; line-height: 1.7; color: var(--t1);
+.EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border-default); }
+.EasyMDEContainer .CodeMirror-focused {
+    box-shadow: var(--focus-ring);
+    border-color: var(--accent);
 }
+.editor-preview, .editor-preview-side {
+    background: var(--bg-surface);
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+.field-block {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin-bottom: 20px;
+}
+.field-block label.head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    margin: 0 0 10px;
+}
+.field-block label.head i { color: var(--accent); }
+.field-help {
+    color: var(--text-tertiary);
+    font-size: 0.78rem;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+.field-help i { color: var(--text-tertiary); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-9 col-xl-8">
 
-        <!-- Anonymity notice -->
-        <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-4"
-             style="background:linear-gradient(135deg,var(--violet-light),#e0f2fe); border:1px solid #ddd6fe;">
-            <div style="font-size:1.3rem; flex-shrink:0;">🔒</div>
+        <div class="mb-3">
+            <span class="section-title">
+                <span class="step-number">01</span><span class="step-dash">—</span>Compose
+            </span>
+            <h1 style="font-size:1.85rem; margin:6px 0 4px;">Share feedback.</h1>
+            <p style="color:var(--text-secondary); margin:0; font-size:0.95rem;">
+                Anything you post is anonymous. Be candid; be specific.
+            </p>
+        </div>
+
+        <!-- Anonymity notice — solid, no gradient -->
+        <div class="d-flex align-items-start gap-3 mb-4"
+             style="background:var(--accent-subtle); border:1px solid var(--accent-tint); border-radius:var(--radius-md); padding:14px 16px;">
+            <i class="bi bi-shield-lock-fill" style="color:var(--accent); font-size:1.15rem; flex-shrink:0; margin-top:1px;"></i>
             <div>
-                <div class="fw-semibold small" style="color:#4c1d95;">Your identity is protected</div>
-                <div class="small" style="color:#5b21b6;">Your feedback is posted anonymously — your name is never shown publicly.</div>
+                <div style="font-weight:500; font-size:0.9rem; color:var(--text-primary);">Your identity is protected.</div>
+                <div style="font-size:0.84rem; color:var(--text-secondary); margin-top:2px;">
+                    Your name is never tied to a post — only the username you chose.
+                </div>
             </div>
         </div>
 
-        <div class="fb-card" style="border-radius:var(--radius);">
-            <div class="fb-card-status-bar" style="background:linear-gradient(to bottom, var(--violet), var(--rose));"></div>
-            <div class="p-4" style="padding-left:24px!important;">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
+        <div class="fb-card" style="padding: 24px 26px;">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
 
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold d-flex align-items-center gap-2" style="color:var(--t1);">
-                            Your Feedback
-                            <span class="fw-normal small" style="color:var(--t3);">
-                                <i class="bi bi-markdown me-1"></i>Markdown supported
-                            </span>
-                        </label>
-                        {{ form.content }}
-                        {% if form.content.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in form.content.errors %}{{ error }}{% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text mt-2" style="color:var(--t3);">
-                            <i class="bi bi-lightbulb me-1" style="color:var(--s-amber);"></i>
-                            Share suggestions, ideas, or concerns. Use the toolbar above to format your text.
-                        </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="d-flex align-items-center gap-2" style="font-weight:500; font-size:0.9rem; color:var(--text-primary); margin-bottom:8px;">
+                        Your feedback
+                        <span style="font-weight:400; font-size:0.78rem; color:var(--text-tertiary);">
+                            <i class="bi bi-markdown me-1"></i>Markdown supported
+                        </span>
+                    </label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                    <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
+                        {% for error in form.content.errors %}{{ error }}{% endfor %}
                     </div>
+                    {% endif %}
+                    <div class="field-help">
+                        <i class="bi bi-lightbulb"></i>
+                        Share suggestions, ideas, or concerns. Use the toolbar above to format your text.
+                    </div>
+                </div>
 
-                    <!-- Visibility -->
-                    <div class="mb-4 p-3 rounded-3" style="background:var(--bg); border:1px solid var(--border);">
-                        <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" style="color:var(--t1);">
-                            <i class="bi bi-eye" style="color:var(--violet);"></i>
-                            Visibility
-                        </label>
-                        {{ form.target_role }}
-                        {% if form.target_role.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in form.target_role.errors %}{{ error }}{% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text mt-1" style="color:var(--t3);">
-                            <i class="bi bi-info-circle me-1"></i>
-                            {{ form.target_role.help_text }}
-                        </div>
+                <!-- Visibility -->
+                <div class="field-block">
+                    <label class="head">
+                        <i class="bi bi-eye"></i>
+                        Visibility
+                    </label>
+                    {{ form.target_role }}
+                    {% if form.target_role.errors %}
+                    <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
+                        {% for error in form.target_role.errors %}{{ error }}{% endfor %}
                     </div>
+                    {% endif %}
+                    <div class="field-help">
+                        <i class="bi bi-info-circle"></i>
+                        {{ form.target_role.help_text }}
+                    </div>
+                </div>
 
-                    <!-- Attachments -->
-                    <div class="mb-4 p-3 rounded-3" style="background:var(--bg); border:1px solid var(--border);">
-                        <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" style="color:var(--t1);">
-                            <i class="bi bi-paperclip" style="color:var(--violet);"></i>
-                            Attachments <span class="fw-normal small" style="color:var(--t3);">(optional)</span>
-                        </label>
-                        {{ form.attachments }}
-                        {% if form.attachments.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in form.attachments.errors %}{{ error }}{% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text mt-1" style="color:var(--t3);">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Images, PDF, Word, Excel/CSV — up to 10 MB per file. Multiple files allowed.
-                        </div>
-                        <div id="attachment-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                <!-- Attachments -->
+                <div class="field-block">
+                    <label class="head">
+                        <i class="bi bi-paperclip"></i>
+                        Attachments
+                        <span style="font-weight:400; color:var(--text-tertiary); font-size:0.78rem;">(optional)</span>
+                    </label>
+                    {{ form.attachments }}
+                    {% if form.attachments.errors %}
+                    <div style="color:var(--error); font-size:0.8rem; margin-top:6px;">
+                        {% for error in form.attachments.errors %}{{ error }}{% endfor %}
                     </div>
+                    {% endif %}
+                    <div class="field-help">
+                        <i class="bi bi-info-circle"></i>
+                        Images, PDF, Word, Excel/CSV — up to 10 MB per file. Multiple files allowed.
+                    </div>
+                    <div id="attachment-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                </div>
 
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{% url 'feed' %}" class="btn btn-outline-secondary d-flex align-items-center gap-1"
-                           style="border-color:var(--border); color:var(--t2); border-radius:8px;">
-                            <i class="bi bi-arrow-left"></i> Cancel
-                        </a>
-                        <button type="submit" id="submit-feedback-btn" class="btn px-5 fw-semibold text-white"
-                                style="background:linear-gradient(135deg,var(--rose),#fb7185);border:none;border-radius:8px;box-shadow:0 4px 14px var(--rose-glow);">
-                            <i class="bi bi-send-fill me-2"></i>Submit Feedback
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="d-flex justify-content-between align-items-center" style="margin-top: 24px;">
+                    <a href="{% url 'feed' %}" class="btn-strativ btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" id="submit-feedback-btn" class="btn-strativ btn-primary" style="padding:0 28px;">
+                        <i class="bi bi-send"></i> Submit feedback
+                    </button>
+                </div>
+            </form>
         </div>
 
     </div>
@@ -153,12 +192,11 @@ const easyMDE = new EasyMDE({
         'code', 'quote', '|',
         'preview', 'side-by-side', 'fullscreen',
     ],
-    minHeight: '160px',
+    minHeight: '180px',
     renderingConfig: { singleLineBreaks: false },
 });
 
 document.querySelector('form').addEventListener('submit', function (e) {
-    // Sync EasyMDE content back into the hidden textarea so Django receives it
     easyMDE.codemirror.save();
 
     if (!easyMDE.value().trim()) {
@@ -167,7 +205,7 @@ document.querySelector('form').addEventListener('submit', function (e) {
         if (!err) {
             err = document.createElement('div');
             err.id = 'content-error';
-            err.className = 'text-danger small mt-1';
+            err.style.cssText = 'color:var(--error); font-size:0.8rem; margin-top:6px;';
             err.textContent = 'Please enter your feedback.';
             document.querySelector('.EasyMDEContainer').after(err);
         }
@@ -185,8 +223,8 @@ document.querySelector('input[name="attachments"]').addEventListener('change', f
     Array.from(this.files).forEach(file => {
         const isImage = file.type.startsWith('image/');
         const chip = document.createElement('div');
-        chip.className = 'd-flex align-items-center gap-1 px-2 py-1 rounded-2 small';
-        chip.style.cssText = 'background:#fff; border:1px solid var(--border); max-width:180px;';
+        chip.className = 'd-flex align-items-center gap-2 px-2 py-1';
+        chip.style.cssText = 'background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-sm); max-width:200px; font-size:0.82rem;';
         if (isImage) {
             const img = document.createElement('img');
             img.style.cssText = 'width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0;';
@@ -194,13 +232,13 @@ document.querySelector('input[name="attachments"]').addEventListener('change', f
             chip.appendChild(img);
         } else {
             const icon = document.createElement('i');
-            icon.className = 'bi bi-file-earmark-fill flex-shrink-0';
-            icon.style.color = 'var(--violet)';
+            icon.className = 'bi bi-file-earmark flex-shrink-0';
+            icon.style.color = 'var(--accent)';
             chip.appendChild(icon);
         }
         const name = document.createElement('span');
         name.className = 'text-truncate';
-        name.style.color = 'var(--t1)';
+        name.style.color = 'var(--text-primary)';
         name.textContent = file.name;
         chip.appendChild(name);
         preview.appendChild(chip);

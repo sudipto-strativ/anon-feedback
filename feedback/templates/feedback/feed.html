@@ -6,12 +6,12 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-7 col-xl-6">
+    <div class="col-12 col-md-10 col-lg-8 col-xl-7">
 
-        <!-- Tab row -->
+        <!-- Section title + tabs -->
         <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-            <span class="small fw-700 text-uppercase" style="letter-spacing:.07em; color:var(--t3);">
-                <i class="bi bi-broadcast me-1" style="color:var(--violet);"></i> Feed
+            <span class="section-title mb-0">
+                <span class="step-number">01</span><span class="step-dash">—</span>Feed
             </span>
             <div class="seg-ctrl">
                 <a href="?tab=recent" class="seg-ctrl-item {% if current_tab == 'recent' %}active{% endif %}">
@@ -28,9 +28,11 @@
 
         <!-- Compose -->
         <div class="compose-box">
-
+            <div class="compose-avatar">
+                <i class="bi bi-incognito"></i>
+            </div>
             <a href="{% url 'post_create' %}" class="compose-trigger">
-                What's on your mind? Share anonymously…
+                What's on your mind? Share it anonymously.
             </a>
         </div>
 
@@ -39,13 +41,16 @@
                 {% include "feedback/partials/post_card.html" with truncate=True %}
             {% endfor %}
         {% else %}
-            <div class="text-center py-5">
-                <div style="font-size:3.5rem; margin-bottom:12px;">💬</div>
-                <h5 class="fw-bold" style="color:var(--t1);">No feedback yet</h5>
-                <p style="color:var(--t2);" class="small mb-4">Be the first to share something with the team.</p>
-                <a href="{% url 'post_create' %}" class="btn px-5 fw-semibold text-white"
-                   style="background:linear-gradient(135deg,var(--rose),#fb7185);border:none;border-radius:10px;box-shadow:0 4px 14px var(--rose-glow);">
-                    <i class="bi bi-plus-lg me-2"></i>Post Feedback
+            <div class="fb-card text-center" style="padding: 56px 24px;">
+                <div style="font-size: 2.4rem; color: var(--text-tertiary); margin-bottom: 14px;">
+                    <i class="bi bi-chat-square-text"></i>
+                </div>
+                <h2 style="font-size: 1.35rem; margin: 0 0 6px;">No feedback yet.</h2>
+                <p style="color: var(--text-secondary); font-size: 0.92rem; margin: 0 0 24px;">
+                    Be the first to share something with the team.
+                </p>
+                <a href="{% url 'post_create' %}" class="btn-strativ btn-primary">
+                    <i class="bi bi-plus-lg"></i> Post feedback
                 </a>
             </div>
         {% endif %}

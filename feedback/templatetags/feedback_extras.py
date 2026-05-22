@@ -108,24 +108,32 @@ def render_markdown(value):
     return mark_safe(clean)
 
 
-AVATAR_GRADIENTS = [
-    'linear-gradient(135deg,#7c3aed,#a855f7)',  # violet
-    'linear-gradient(135deg,#f43f5e,#fb7185)',  # rose
-    'linear-gradient(135deg,#0ea5e9,#38bdf8)',  # sky
-    'linear-gradient(135deg,#059669,#34d399)',  # emerald
-    'linear-gradient(135deg,#f59e0b,#fbbf24)',  # amber
-    'linear-gradient(135deg,#ec4899,#f472b6)',  # pink
-    'linear-gradient(135deg,#06b6d4,#67e8f9)',  # cyan
-    'linear-gradient(135deg,#8b5cf6,#c084fc)',  # purple
+# Strativ branding forbids gradients — flat colour palette only.
+# Brand orange leads, warm-black anchors, with the Strativ data-viz scale
+# providing the rest of the categorical hues.
+AVATAR_COLORS = [
+    '#FE5001',  # strativ orange
+    '#1A0E1C',  # warm black
+    '#1570EF',  # info blue
+    '#0E9384',  # teal
+    '#F9B70E',  # brand yellow
+    '#7A5AF8',  # violet (data-viz, not brand)
+    '#475467',  # slate
+    '#039855',  # success green
 ]
+
 
 @register.filter
 def avatar_gradient(post_id):
-    """Return a deterministic gradient string based on post id."""
+    """Return a deterministic solid colour based on post id.
+
+    Filter name kept for template compatibility; Strativ branding rules
+    out gradients so this now returns a flat colour token.
+    """
     try:
-        return AVATAR_GRADIENTS[int(post_id) % len(AVATAR_GRADIENTS)]
+        return AVATAR_COLORS[int(post_id) % len(AVATAR_COLORS)]
     except (TypeError, ValueError):
-        return AVATAR_GRADIENTS[0]
+        return AVATAR_COLORS[0]
 
 
 @register.simple_tag

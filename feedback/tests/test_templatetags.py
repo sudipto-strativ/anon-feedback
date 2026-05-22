@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from feedback.templatetags.feedback_extras import (
     timesince_short, truncate_chars, get_item, score_class,
     render_markdown, avatar_gradient, user_role_badge,
-    AVATAR_GRADIENTS,
+    AVATAR_COLORS,
 )
 
 
@@ -155,24 +155,28 @@ class RenderMarkdownFilterTest(TestCase):
 
 
 class AvatarGradientFilterTest(TestCase):
-    def test_returns_gradient_string(self):
+    # The Strativ brand guideline forbids gradients, so the helper now returns
+    # a solid hex colour. Filter name kept for template compatibility.
+    def test_returns_solid_hex_string(self):
         result = avatar_gradient(1)
-        self.assertIn('linear-gradient', result)
+        self.assertTrue(result.startswith('#'))
+        self.assertEqual(len(result), 7)
 
     def test_deterministic(self):
         self.assertEqual(avatar_gradient(3), avatar_gradient(3))
 
     def test_wraps_around(self):
-        n = len(AVATAR_GRADIENTS)
+        n = len(AVATAR_COLORS)
         self.assertEqual(avatar_gradient(0), avatar_gradient(n))
 
     def test_invalid_returns_first(self):
-        self.assertEqual(avatar_gradient(None), AVATAR_GRADIENTS[0])
+        self.assertEqual(avatar_gradient(None), AVATAR_COLORS[0])
 
-    def test_all_ids_return_valid_gradient(self):
+    def test_all_ids_return_valid_colour(self):
         for i in range(20):
             result = avatar_gradient(i)
-            self.assertIn('linear-gradient', result)
+            self.assertTrue(result.startswith('#'))
+            self.assertEqual(len(result), 7)
 
 
 class UserRoleBadgeTagTest(TestCase):
