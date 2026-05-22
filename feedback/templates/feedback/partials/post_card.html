@@ -2,14 +2,14 @@
 {% with user_vote=user_vote_map|get_item:post.id %}
 {% with is_fav=favourite_set|get_item:post.id %}
 
-<div class="fb-card status-{{ post.status }}" id="post-card-{{ post.id }}">
+<div class="fb-card status-{{ post.status }}" id="post-card-{{ post.public_id }}">
 
     <!-- Left status bar -->
     <div class="fb-card-status-bar {{ post.status }}"></div>
 
     <!-- Header -->
     <div class="fb-card-header">
-        <div class="fb-avatar" style="background: {{ post.id|avatar_gradient }};">
+        <div class="fb-avatar" style="background: {{ post.id|avatar_gradient }};">{# avatar_gradient still keys on numeric id; it's purely visual and not exposed externally #}
             <i class="bi bi-incognito" style="font-size:1rem;"></i>
         </div>
 
@@ -47,7 +47,7 @@
 
     <!-- Body -->
     <div class="fb-card-body">
-        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none">
+        <a href="{% url 'post_detail' post.public_id %}" class="text-decoration-none">
             <div class="md-content {% if truncate != False %}truncated{% endif %}">{{ post.content|render_markdown }}</div>
         </a>
         {% with attachments=post.attachments.all %}
@@ -64,7 +64,7 @@
     {% if post.comment_count %}
     <div class="fb-counts">
         <div class="fb-counts-left"></div>
-        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none" style="color:var(--text-secondary);">
+        <a href="{% url 'post_detail' post.public_id %}" class="text-decoration-none" style="color:var(--text-secondary);">
             <i class="bi bi-chat-dots" style="color:var(--accent); opacity:0.7;"></i>
             {{ post.comment_count }} comment{{ post.comment_count|pluralize }}
         </a>
@@ -79,19 +79,19 @@
         <div class="vote-cluster">
             <button
                 class="vcluster-btn {% if user_vote == 'like' %}active-like{% endif %}"
-                id="like-btn-post-{{ post.id }}"
-                onclick="votePost({{ post.id }}, 'like')"
+                id="like-btn-post-{{ post.public_id }}"
+                onclick="votePost('{{ post.public_id }}', 'like')"
                 title="Upvote"
             >
                 <i class="bi bi-hand-thumbs-up{% if user_vote == 'like' %}-fill{% endif %}"></i>
             </button>
-            <span id="like-count-post-{{ post.id }}" class="vcluster-count like-count">{{ post.like_count }}</span>
+            <span id="like-count-post-{{ post.public_id }}" class="vcluster-count like-count">{{ post.like_count }}</span>
             <span class="vcluster-sep">·</span>
-            <span id="dislike-count-post-{{ post.id }}" class="vcluster-count dislike-count">{{ post.dislike_count }}</span>
+            <span id="dislike-count-post-{{ post.public_id }}" class="vcluster-count dislike-count">{{ post.dislike_count }}</span>
             <button
                 class="vcluster-btn {% if user_vote == 'dislike' %}active-dislike{% endif %}"
-                id="dislike-btn-post-{{ post.id }}"
-                onclick="votePost({{ post.id }}, 'dislike')"
+                id="dislike-btn-post-{{ post.public_id }}"
+                onclick="votePost('{{ post.public_id }}', 'dislike')"
                 title="Downvote"
             >
                 <i class="bi bi-hand-thumbs-down{% if user_vote == 'dislike' %}-fill{% endif %}"></i>
@@ -100,7 +100,7 @@
 
         <div class="fb-action-divider"></div>
 
-        <a href="{% url 'post_detail' post.id %}" class="fb-action-btn">
+        <a href="{% url 'post_detail' post.public_id %}" class="fb-action-btn">
             <i class="bi bi-chat-dots"></i> Comment
         </a>
 
@@ -108,8 +108,8 @@
 
         <button
             class="fb-action-btn {% if is_fav %}active-fav{% endif %}"
-            id="fav-btn-post-{{ post.id }}"
-            onclick="toggleFavourite({{ post.id }})"
+            id="fav-btn-post-{{ post.public_id }}"
+            onclick="toggleFavourite('{{ post.public_id }}')"
             title="{% if is_fav %}Remove from favourites{% else %}Save to favourites{% endif %}"
         >
             <i class="bi bi-bookmark{% if is_fav %}-fill{% endif %}"></i>

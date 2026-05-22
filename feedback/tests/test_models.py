@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from feedback.models import (
     UserProfile, NotificationEmail, SlackConfig,
     Post, Comment, Favourite, PostAttachment, CommentImage, Vote,
+    Subscription,
 )
 
 
@@ -13,7 +14,26 @@ def make_user(username='testuser', **kwargs):
 
 
 def make_post(author, content='Test content', status='pending'):
-    return Post.objects.create(author=author, content=content, status=status)
+    """Create a Post and auto-subscribe `author`.
+
+    The `author` argument used to feed `Post.author = ForeignKey(User)`.
+    That FK is gone (migration 0012) — the post is now anonymous. The
+    helper still takes `author` so existing tests don't have to change,
+    but it now creates a `Subscription` row so the same user is treated
+    as the post's owner for visibility checks and notifications.
+    """
+    post = Post.objects.create(content=content, status=status)
+    Subscription.objects.create(user=author, post=post)
+    return post
+
+
+def make_comment(post, author, content='Test comment'):
+    """Create a Comment with a role snapshot and auto-subscribe the
+    author. Mirrors `make_post` rationale."""
+    role = getattr(getattr(author, 'profile', None), 'role', 'employee')
+    comment = Comment.objects.create(post=post, role=role, content=content)
+    Subscription.objects.get_or_create(user=author, post=post)
+    return comment
 
 
 class UserProfileModelTest(TestCase):
@@ -83,7 +103,10 @@ class PostModelTest(TestCase):
         self.post = make_post(self.user, 'Hello world')
 
     def test_str(self):
-        self.assertIn('testuser', str(self.post))
+        # Post.__str__ no longer includes the author's username — that
+        # FK is gone. We just confirm the formatted string carries the
+        # post ID, which is what makes it useful in shell logs.
+        self.assertIn(f'#{self.post.id}', str(self.post))
 
     def test_default_status(self):
         self.assertEqual(self.post.status, 'pending')
@@ -115,7 +138,7 @@ class PostModelTest(TestCase):
 
     def test_comment_count(self):
         self.assertEqual(self.post.comment_count, 0)
-        Comment.objects.create(post=self.post, author=self.user, content='hi')
+        make_comment(self.post, self.user, content='hi')
         self.assertEqual(self.post.comment_count, 1)
 
     def test_get_status_color_pending(self):
@@ -149,11 +172,24 @@ class CommentModelTest(TestCase):
     def setUp(self):
         self.user = make_user()
         self.post = make_post(self.user)
-        self.comment = Comment.objects.create(post=self.post, author=self.user, content='Nice post')
+        self.comment = make_comment(self.post, self.user, content='Nice post')
 
     def test_str(self):
-        self.assertIn('testuser', str(self.comment))
+        # Comment.__str__ no longer includes the author username — same
+        # rationale as Post. Both fields contribute to the on-screen
+        # identifier, and the post/comment IDs are enough.
+        self.assertIn(f'#{self.comment.id}', str(self.comment))
         self.assertIn(str(self.post.id), str(self.comment))
+
+    def test_role_snapshot_defaults_to_employee(self):
+        self.assertEqual(self.comment.role, 'employee')
+
+    def test_role_snapshot_captures_role_at_creation(self):
+        boss = make_user('boss')
+        boss.profile.role = 'ceo'
+        boss.profile.save()
+        c = make_comment(self.post, boss, content='exec note')
+        self.assertEqual(c.role, 'ceo')
 
     def test_like_count_zero(self):
         self.assertEqual(self.comment.like_count, 0)
@@ -176,7 +212,7 @@ class CommentModelTest(TestCase):
 
     def test_ordering_oldest_first(self):
         other = make_user('other')
-        comment2 = Comment.objects.create(post=self.post, author=other, content='reply')
+        comment2 = make_comment(self.post, other, content='reply')
         comments = list(Comment.objects.filter(post=self.post))
         self.assertEqual(comments[0].id, self.comment.id)
         self.assertEqual(comments[1].id, comment2.id)
@@ -271,7 +307,7 @@ class CommentImageModelTest(TestCase):
     def setUp(self):
         self.user = make_user()
         self.post = make_post(self.user)
-        self.comment = Comment.objects.create(post=self.post, author=self.user, content='hi')
+        self.comment = make_comment(self.post, self.user, content='hi')
 
     def test_str(self):
         img = CommentImage(comment=self.comment, image='comment_images/2024/01/img.jpg')
@@ -283,7 +319,7 @@ class VoteModelTest(TestCase):
         self.user = make_user()
         self.other = make_user('other')
         self.post = make_post(self.user)
-        self.comment = Comment.objects.create(post=self.post, author=self.user, content='hi')
+        self.comment = make_comment(self.post, self.user, content='hi')
 
     def test_unique_post_vote(self):
         Vote.objects.create(user=self.user, post=self.post, vote_type='like')

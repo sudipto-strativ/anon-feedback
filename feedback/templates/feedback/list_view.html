@@ -87,7 +87,7 @@
                             width:6px; height:6px; border-radius:50%; flex-shrink:0; vertical-align:middle;
                             background:{% if post.status == 'pending' %}var(--s-pending){% elif post.status == 'in_progress' %}var(--s-in-progress){% elif post.status == 'done' %}var(--s-done){% else %}var(--s-rejected){% endif %};
                         "></span>
-                        <a href="{% url 'post_detail' post.id %}" class="text-decoration-none"
+                        <a href="{% url 'post_detail' post.public_id %}" class="text-decoration-none"
                            style="color:var(--text-primary); font-weight:500;" title="{{ post.content }}">
                             {{ post.content|truncate_chars:80 }}
                         </a>
@@ -114,7 +114,7 @@
                         </span>
                     </td>
                     <td class="py-3">
-                        <a href="{% url 'post_detail' post.id %}" class="comment-count-btn">
+                        <a href="{% url 'post_detail' post.public_id %}" class="comment-count-btn">
                             <i class="bi bi-chat-dots"></i> {{ post.comment_count }}
                         </a>
                     </td>

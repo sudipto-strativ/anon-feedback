@@ -5,7 +5,9 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from feedback.models import Post, Comment, Vote, Favourite, UserProfile
+from feedback.models import (
+    Post, Comment, Vote, Favourite, UserProfile, Subscription,
+)
 
 
 def make_user(username='testuser', role='employee'):
@@ -16,7 +18,24 @@ def make_user(username='testuser', role='employee'):
 
 
 def make_post(author, content='Test content', status='pending'):
-    return Post.objects.create(author=author, content=content, status=status)
+    """Create a Post + auto-subscribe `author`.
+
+    Post no longer carries an author FK (migration 0012). The helper
+    keeps the same signature so we don't rewrite every test, but
+    `author` is now interpreted as "the user who will see this as
+    their own" — the same semantic the FK used to provide — and we
+    materialise that via a Subscription row.
+    """
+    post = Post.objects.create(content=content, status=status)
+    Subscription.objects.create(user=author, post=post)
+    return post
+
+
+def make_comment(post, author, content='Test comment'):
+    role = getattr(getattr(author, 'profile', None), 'role', 'employee')
+    comment = Comment.objects.create(post=post, role=role, content=content)
+    Subscription.objects.get_or_create(user=author, post=post)
+    return comment
 
 
 class AuthRedirectTest(TestCase):
@@ -130,26 +149,28 @@ class PostDetailViewTest(TestCase):
 
     def test_get_as_employee(self):
         self.client.login(username='employee', password='pass')
-        response = self.client.get(reverse('post_detail', args=[self.post.pk]))
+        response = self.client.get(reverse('post_detail', args=[self.post.public_id]))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['can_update_status'])
 
     def test_get_as_hr_can_update_status(self):
         self.client.login(username='hr_user', password='pass')
-        response = self.client.get(reverse('post_detail', args=[self.post.pk]))
+        response = self.client.get(reverse('post_detail', args=[self.post.public_id]))
         self.assertTrue(response.context['can_update_status'])
         self.assertIsNotNone(response.context['status_form'])
 
     def test_get_nonexistent_post_returns_404(self):
         self.client.login(username='employee', password='pass')
-        response = self.client.get(reverse('post_detail', args=[99999]))
+        # Random UUID that doesn't match any post — the URL converter
+        # accepts the shape but the view should 404.
+        response = self.client.get(reverse('post_detail', args=['00000000-0000-0000-0000-000000000000']))
         self.assertEqual(response.status_code, 404)
 
     def test_post_comment_creates_comment(self):
         self.client.login(username='employee', password='pass')
         with patch('feedback.views.notify_new_comment'):
             response = self.client.post(
-                reverse('post_detail', args=[self.post.pk]),
+                reverse('post_detail', args=[self.post.public_id]),
                 {'content': 'My comment'},
             )
         self.assertEqual(response.status_code, 302)
@@ -158,7 +179,7 @@ class PostDetailViewTest(TestCase):
     def test_post_empty_comment_no_image_invalid(self):
         self.client.login(username='employee', password='pass')
         response = self.client.post(
-            reverse('post_detail', args=[self.post.pk]),
+            reverse('post_detail', args=[self.post.public_id]),
             {'content': ''},
         )
         self.assertEqual(response.status_code, 200)
@@ -167,7 +188,7 @@ class PostDetailViewTest(TestCase):
     def test_user_post_vote_in_context(self):
         self.client.login(username='employee', password='pass')
         Vote.objects.create(user=self.employee, post=self.post, vote_type='like')
-        response = self.client.get(reverse('post_detail', args=[self.post.pk]))
+        response = self.client.get(reverse('post_detail', args=[self.post.public_id]))
         self.assertEqual(response.context['user_post_vote'], 'like')
 
 
@@ -186,7 +207,13 @@ class PostCreateViewTest(TestCase):
             response = self.client.post(reverse('post_create'), {'content': 'New feedback'})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Post.objects.count(), 1)
-        self.assertEqual(Post.objects.first().author, self.user)
+        # Post.author is gone (migration 0012). The contract is now
+        # "the actor is auto-subscribed" — that's what we verify.
+        post = Post.objects.first()
+        self.assertTrue(
+            Subscription.objects.filter(user=self.user, post=post).exists(),
+            "post_create should auto-subscribe the actor",
+        )
 
     def test_post_invalid_form_no_content(self):
         response = self.client.post(reverse('post_create'), {'content': ''})
@@ -204,7 +231,7 @@ class VotePostViewTest(TestCase):
 
     def _vote(self, vote_type):
         return self.client.post(
-            reverse('vote_post', args=[self.post.pk]),
+            reverse('vote_post', args=[self.post.public_id]),
             data=json.dumps({'vote_type': vote_type}),
             content_type='application/json',
         )
@@ -242,7 +269,7 @@ class VotePostViewTest(TestCase):
         self.assertEqual(data['score'], 1)
 
     def test_get_not_allowed(self):
-        response = self.client.get(reverse('vote_post', args=[self.post.pk]))
+        response = self.client.get(reverse('vote_post', args=[self.post.public_id]))
         self.assertEqual(response.status_code, 405)
 
 
@@ -252,7 +279,7 @@ class VoteCommentViewTest(TestCase):
         self.user = make_user()
         self.client.login(username='testuser', password='pass')
         self.post = make_post(self.user)
-        self.comment = Comment.objects.create(post=self.post, author=self.user, content='hi')
+        self.comment = make_comment(self.post, self.user, content='hi')
 
     def _vote(self, vote_type):
         return self.client.post(
@@ -298,7 +325,7 @@ class UpdateStatusViewTest(TestCase):
     def test_employee_cannot_update_status(self):
         self.client.login(username='employee', password='pass')
         response = self.client.post(
-            reverse('update_status', args=[self.post.pk]),
+            reverse('update_status', args=[self.post.public_id]),
             {'status': 'in_progress', 'remark': '', 'eta': ''},
         )
         self.assertEqual(response.status_code, 403)
@@ -309,7 +336,7 @@ class UpdateStatusViewTest(TestCase):
         self.client.login(username='hr', password='pass')
         with patch('feedback.views.notify_status_update'):
             response = self.client.post(
-                reverse('update_status', args=[self.post.pk]),
+                reverse('update_status', args=[self.post.public_id]),
                 {'status': 'in_progress', 'remark': '', 'eta': ''},
             )
         self.post.refresh_from_db()
@@ -320,7 +347,7 @@ class UpdateStatusViewTest(TestCase):
         self.client.login(username='ceo', password='pass')
         with patch('feedback.views.notify_status_update'):
             response = self.client.post(
-                reverse('update_status', args=[self.post.pk]),
+                reverse('update_status', args=[self.post.public_id]),
                 {'status': 'done', 'remark': 'Fixed!', 'eta': ''},
             )
         self.post.refresh_from_db()
@@ -330,7 +357,7 @@ class UpdateStatusViewTest(TestCase):
         self.client.login(username='admin_user', password='pass')
         with patch('feedback.views.notify_status_update'):
             self.client.post(
-                reverse('update_status', args=[self.post.pk]),
+                reverse('update_status', args=[self.post.public_id]),
                 {'status': 'in_progress', 'remark': '', 'eta': ''},
             )
         self.post.refresh_from_db()
@@ -340,7 +367,7 @@ class UpdateStatusViewTest(TestCase):
     def test_done_requires_remark(self):
         self.client.login(username='hr', password='pass')
         self.client.post(
-            reverse('update_status', args=[self.post.pk]),
+            reverse('update_status', args=[self.post.public_id]),
             {'status': 'done', 'remark': '', 'eta': ''},
         )
         self.post.refresh_from_db()
@@ -348,7 +375,7 @@ class UpdateStatusViewTest(TestCase):
 
     def test_get_not_allowed(self):
         self.client.login(username='hr', password='pass')
-        response = self.client.get(reverse('update_status', args=[self.post.pk]))
+        response = self.client.get(reverse('update_status', args=[self.post.public_id]))
         self.assertEqual(response.status_code, 405)
 
 
@@ -360,7 +387,7 @@ class ToggleFavouriteViewTest(TestCase):
         self.post = make_post(self.user)
 
     def _toggle(self):
-        return self.client.post(reverse('toggle_favourite', args=[self.post.pk]))
+        return self.client.post(reverse('toggle_favourite', args=[self.post.public_id]))
 
     def test_add_favourite(self):
         response = self._toggle()
@@ -375,7 +402,7 @@ class ToggleFavouriteViewTest(TestCase):
         self.assertEqual(Favourite.objects.count(), 0)
 
     def test_get_not_allowed(self):
-        response = self.client.get(reverse('toggle_favourite', args=[self.post.pk]))
+        response = self.client.get(reverse('toggle_favourite', args=[self.post.public_id]))
         self.assertEqual(response.status_code, 405)
 
 
@@ -469,7 +496,7 @@ class BuildVoteMapTest(TestCase):
 
     def test_excludes_comment_votes(self):
         from feedback.views import _build_vote_map
-        comment = Comment.objects.create(post=self.post, author=self.user, content='hi')
+        comment = make_comment(self.post, self.user, content='hi')
         Vote.objects.create(user=self.user, comment=comment, vote_type='like')
         result = _build_vote_map(self.user, [self.post.id])
         self.assertEqual(result, {})

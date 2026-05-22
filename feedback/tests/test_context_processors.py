@@ -1,7 +1,7 @@
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import User, AnonymousUser
 
-from feedback.models import Post
+from feedback.models import Post, Subscription
 from feedback.context_processors import sidebar_stats
 
 
@@ -10,7 +10,11 @@ def make_user(username='testuser'):
 
 
 def make_post(author, status='pending'):
-    return Post.objects.create(author=author, content='Test', status=status)
+    # Post.author FK is gone; we materialise the `author` argument as a
+    # Subscription so existing test setup still works.
+    post = Post.objects.create(content='Test', status=status)
+    Subscription.objects.create(user=author, post=post)
+    return post
 
 
 class SidebarStatsContextProcessorTest(TestCase):
