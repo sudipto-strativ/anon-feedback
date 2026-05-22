@@ -9,7 +9,7 @@ from feedback.forms import (
     RegisterForm, PostForm, CommentForm, StatusUpdateForm,
     ALLOWED_ATTACHMENT_EXTENSIONS, MAX_ATTACHMENT_SIZE, MAX_IMAGE_SIZE,
 )
-from feedback.models import Post
+from feedback.models import Post, Subscription
 from django.contrib.auth.models import User
 
 
@@ -18,7 +18,11 @@ def make_user(username='testuser'):
 
 
 def make_post(author, content='Test', status='pending'):
-    return Post.objects.create(author=author, content=content, status=status)
+    # author is now an auto-subscribe hint, not an FK assignment. See
+    # migration 0012 for the structural change.
+    post = Post.objects.create(content=content, status=status)
+    Subscription.objects.create(user=author, post=post)
+    return post
 
 
 def small_image(name='photo.jpg', size_bytes=None):
@@ -33,8 +37,26 @@ def small_image(name='photo.jpg', size_bytes=None):
     return SimpleUploadedFile(name, data, content_type='image/jpeg')
 
 
-def small_file(name='doc.pdf', size=100):
-    return SimpleUploadedFile(name, b'x' * size, content_type='application/pdf')
+def small_file(name='doc.pdf', size=None):
+    """Return a real, parseable PDF.
+
+    The previous version returned random bytes labelled as PDF. That
+    was fine when the form trusted the extension, but the upload
+    sanitiser (utils/uploads.py) now opens the file with pikepdf and
+    rejects unparseable content — which means we have to hand it a
+    real PDF here.
+    """
+    import io
+    import pikepdf
+    pdf = pikepdf.new()
+    pdf.add_blank_page()
+    buf = io.BytesIO()
+    pdf.save(buf)
+    data = buf.getvalue()
+    if size and size > len(data):
+        # Pad if a specific size was requested (legacy `size` arg).
+        data = data + b'\n%' + b'x' * (size - len(data) - 2)
+    return SimpleUploadedFile(name, data, content_type='application/pdf')
 
 
 class RegisterFormTest(TestCase):

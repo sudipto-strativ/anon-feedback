@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 
-from feedback.models import Post, Comment, NotificationEmail, SlackConfig
+from feedback.models import Post, Comment, NotificationEmail, SlackConfig, Subscription
 from feedback.notifications import (
     send_slack_message, notify_new_post, notify_new_comment, notify_status_update,
 )
@@ -14,7 +14,18 @@ def make_user(username='testuser'):
 
 
 def make_post(author, content='Test content', status='pending'):
-    return Post.objects.create(author=author, content=content, status=status)
+    # See test_models.make_post for the rationale; `author` becomes a
+    # Subscription row, not an FK assignment.
+    post = Post.objects.create(content=content, status=status)
+    Subscription.objects.create(user=author, post=post)
+    return post
+
+
+def make_comment(post, author, content='Test'):
+    role = getattr(getattr(author, 'profile', None), 'role', 'employee')
+    comment = Comment.objects.create(post=post, role=role, content=content)
+    Subscription.objects.get_or_create(user=author, post=post)
+    return comment
 
 
 class SendSlackMessageTest(TestCase):
@@ -128,9 +139,7 @@ class NotifyNewCommentTest(TestCase):
     def setUp(self):
         self.user = make_user()
         self.post = make_post(self.user)
-        self.comment = Comment.objects.create(
-            post=self.post, author=self.user, content='Great idea!'
-        )
+        self.comment = make_comment(self.post, self.user, content='Great idea!')
 
     @patch('feedback.notifications.send_slack_message')
     @patch('feedback.notifications.send_mail')
@@ -161,12 +170,20 @@ class NotifyNewCommentTest(TestCase):
 
     @patch('feedback.notifications.send_slack_message')
     @patch('feedback.notifications.send_mail')
-    def test_role_display_in_slack_message(self, mock_mail, mock_slack):
+    def test_role_no_longer_appears_in_slack_message(self, mock_mail, mock_slack):
+        # The pre-anonymity-hardening version embedded the commenter's
+        # role (HR / CEO / etc.) in the Slack payload, which deanonymised
+        # rare roles. The hardening rule: Slack messages don't carry
+        # role text any more.
         self.user.profile.role = 'hr'
         self.user.profile.save()
-        notify_new_comment(self.comment)
+        # Use a fresh comment with the updated role snapshot.
+        c = make_comment(self.post, self.user, content='Important note')
+        notify_new_comment(c)
         message = mock_slack.call_args[0][0]
-        self.assertIn('HR', message)
+        self.assertNotIn('HR', message)
+        self.assertNotIn('CEO', message)
+        self.assertNotIn('Member', message)
 
 
 class NotifyStatusUpdateTest(TestCase):
