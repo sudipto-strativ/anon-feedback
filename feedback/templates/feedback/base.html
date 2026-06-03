@@ -6,7 +6,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{% block title %}Strativ Voice{% endblock %}</title>
 
-        <link rel="icon" type="image/svg+xml" href="{% static 'feedback/brand/icon-color-on-light.svg' %}">
+        <link rel="icon" type="image/svg+xml" id="favicon" href="{% static 'feedback/brand/icon-color-on-light.svg' %}">
+
+        <script>
+            // Apply theme before paint to avoid FOUC
+            (function () {
+                try {
+                    var saved = localStorage.getItem('theme');
+                    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                    document.documentElement.setAttribute('data-theme', theme);
+                    document.documentElement.setAttribute('data-bs-theme', theme);
+                } catch (e) {}
+            })();
+        </script>
 
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -35,27 +47,31 @@
                 --brand-yellow: #F9B70E;
                 --brand-warm-black: #1A0E1C;
 
-                /* Surfaces */
-                --bg-canvas: #FCFCFD;
+                /* Surfaces — only the page canvas shifted darker so cards lift off
+                   the page. bg-subtle / bg-muted stay at skill defaults because they're
+                   used inside cards (comment bubbles, table headers, compose trigger). */
+                --bg-canvas: #F4F5F7;
                 --bg-surface: #FFFFFF;
                 --bg-subtle: #F9FAFB;
                 --bg-muted: #F2F4F7;
                 --bg-inverse: #1A0E1C;
 
-                /* Borders */
-                --border-subtle: #F2F4F7;
-                --border-default: #E4E7EC;
-                --border-strong: #D0D5DD;
+                /* Borders — bumped a step darker than skill defaults for clearer
+                   separation between cards/inputs on light surfaces. */
+                --border-subtle: #E4E7EC;
+                --border-default: #D0D5DD;
+                --border-strong: #98A2B3;
 
-                /* Text — warm-black with decreasing opacity */
+                /* Text — warm-black with decreasing opacity. Tiers bumped from skill
+                   defaults (0.78/0.56/0.32) for clearer reading of supporting copy. */
                 --text-primary: #1A0E1C;
-                --text-secondary: rgba(26, 14, 28, 0.78);
-                --text-tertiary: rgba(26, 14, 28, 0.56);
-                --text-disabled: rgba(26, 14, 28, 0.32);
+                --text-secondary: rgba(26, 14, 28, 0.86);
+                --text-tertiary: rgba(26, 14, 28, 0.68);
+                --text-disabled: rgba(26, 14, 28, 0.40);
                 --text-on-accent: #FFFFFF;
                 --text-on-dark: #FFFFFF;
-                --text-on-dark-secondary: rgba(255, 255, 255, 0.72);
-                --text-on-dark-tertiary: rgba(255, 255, 255, 0.50);
+                --text-on-dark-secondary: rgba(255, 255, 255, 0.84);
+                --text-on-dark-tertiary: rgba(255, 255, 255, 0.66);
 
                 /* Status — deliberately not orange */
                 --success: #039855;
@@ -94,6 +110,197 @@
                 /* Fonts */
                 --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                 --font-display: 'Expletus Sans', Georgia, serif;
+
+                /* Status pill / alert / role-badge borders — themed */
+                --pill-border-warning: #FDE68A;
+                --pill-border-info: #BFDBFE;
+                --pill-border-success: #A7F3D0;
+                --pill-border-error: #FECACA;
+
+                /* Vote affordance — both muted so neither competes with brand orange.
+                   Like = calm cool slate, dislike = muted rose. Brand orange stays
+                   reserved for THE CTA per skill §16. */
+                --vote-up: #5B7C99;
+                --vote-up-subtle: rgba(91, 124, 153, 0.10);
+                --vote-down: #B8546A;
+                --vote-down-subtle: rgba(184, 84, 106, 0.10);
+
+                color-scheme: light;
+            }
+
+            /* ── DARK MODE ───────────────────────────────────── */
+            [data-theme="dark"] {
+                /* Surfaces — neutral warm-black hierarchy.
+                   Brand warm-black (#1A0E1C) reads purple on large dark surfaces because
+                   of its magenta hue; we shift to a neutral warm (hue ~25°) that keeps
+                   the warmth without the purple cast. Sidebar sits darker than cards. */
+                --bg-canvas: #100E0C;
+                --bg-surface: #1A1715;
+                --bg-subtle: #221F1C;
+                --bg-muted: #2C2825;
+                --bg-inverse: #080706;
+
+                /* Borders — rely on these more than shadows */
+                --border-subtle: rgba(255, 255, 255, 0.06);
+                --border-default: rgba(255, 255, 255, 0.10);
+                --border-strong: rgba(255, 255, 255, 0.20);
+
+                /* Text — warm-off-white, neutral (no magenta tinge). Tiers bumped for
+                   readability — dark surfaces especially benefit from higher opacity
+                   on supporting text. */
+                --text-primary: #FAF7F2;
+                --text-secondary: rgba(250, 247, 242, 0.88);
+                --text-tertiary: rgba(250, 247, 242, 0.70);
+                --text-disabled: rgba(250, 247, 242, 0.42);
+
+                /* Brand orange unchanged — reads beautifully on warm-black */
+                --accent-subtle: rgba(254, 80, 1, 0.14);
+                --accent-tint: rgba(254, 80, 1, 0.22);
+
+                /* Status — brighter dark-mode variants */
+                --success: #12B76A;
+                --success-bg: rgba(18, 183, 106, 0.14);
+                --success-fg: #6EE7B7;
+                --warning: #F79009;
+                --warning-bg: rgba(247, 144, 9, 0.14);
+                --warning-fg: #FCD34D;
+                --error: #F04438;
+                --error-bg: rgba(240, 68, 56, 0.14);
+                --error-fg: #FCA5A5;
+                --info: #53B1FD;
+                --info-bg: rgba(83, 177, 253, 0.14);
+                --info-fg: #93C5FD;
+
+                --s-pending: #F79009;
+                --s-in-progress: #53B1FD;
+                --s-done: #12B76A;
+                --s-rejected: #F04438;
+
+                /* Vote — lighter, slightly desaturated for dark surfaces */
+                --vote-up: #94A8C2;
+                --vote-up-subtle: rgba(148, 168, 194, 0.14);
+                --vote-down: #E48898;
+                --vote-down-subtle: rgba(228, 136, 152, 0.14);
+
+                --pill-border-warning: rgba(247, 144, 9, 0.40);
+                --pill-border-info: rgba(83, 177, 253, 0.40);
+                --pill-border-success: rgba(18, 183, 106, 0.40);
+                --pill-border-error: rgba(240, 68, 56, 0.40);
+
+                /* Shadows — reduced; borders carry separation */
+                --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.30);
+                --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.50), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
+                --shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.55), 0 4px 6px -2px rgba(0, 0, 0, 0.30);
+
+                color-scheme: dark;
+            }
+
+            /* Themed borders override the hardcoded ones so dark mode reads correctly */
+            .status-pill.pending { border-color: var(--pill-border-warning); }
+            .status-pill.in_progress { border-color: var(--pill-border-info); }
+            .status-pill.done { border-color: var(--pill-border-success); }
+            .status-pill.rejected { border-color: var(--pill-border-error); }
+            .alert-success { border-color: var(--pill-border-success); }
+            .alert-info { border-color: var(--pill-border-info); }
+            .alert-warning { border-color: var(--pill-border-warning); }
+            .alert-danger, .alert-error { border-color: var(--pill-border-error); }
+            .role-badge-hr { border-color: var(--pill-border-info); }
+            .fb-comment-bubble-hr { border-color: var(--pill-border-info); }
+
+            /* In dark mode, the CEO bubble uses bg-inverse (very dark) — bump border for visibility */
+            [data-theme="dark"] .fb-comment-bubble-ceo {
+                border-color: rgba(255, 255, 255, 0.10);
+            }
+            [data-theme="dark"] .role-badge-ceo {
+                border-color: rgba(255, 255, 255, 0.14);
+            }
+            /* Bootstrap dismiss button has a white-X SVG by default in dark contexts; invert on light */
+            [data-theme="dark"] .btn-close {
+                filter: invert(1) grayscale(100%) brightness(200%);
+            }
+            /* Dropdown menu surfaces in dark mode (Bootstrap data-bs-theme handles most, but normalize) */
+            [data-theme="dark"] .dropdown-menu {
+                background: var(--bg-surface);
+                border-color: var(--border-default);
+                color: var(--text-primary);
+            }
+
+            /* Theme-switch transition — applied only during toggle, removed after,
+               so initial paint and ongoing interactions stay snappy. */
+            html.theme-switching,
+            html.theme-switching *,
+            html.theme-switching *::before,
+            html.theme-switching *::after {
+                transition:
+                    background-color 280ms cubic-bezier(0.65, 0, 0.35, 1),
+                    border-color 280ms cubic-bezier(0.65, 0, 0.35, 1),
+                    color 280ms cubic-bezier(0.65, 0, 0.35, 1),
+                    fill 280ms cubic-bezier(0.65, 0, 0.35, 1),
+                    box-shadow 280ms cubic-bezier(0.65, 0, 0.35, 1) !important;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                html.theme-switching,
+                html.theme-switching *,
+                html.theme-switching *::before,
+                html.theme-switching *::after {
+                    transition: none !important;
+                }
+            }
+
+            /* Theme toggle button */
+            .theme-toggle-btn {
+                background: var(--bg-surface);
+                border: 1px solid var(--border-default);
+                color: var(--text-secondary);
+                border-radius: var(--radius-sm);
+                width: 38px;
+                height: 38px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 1rem;
+                line-height: 1;
+                transition: color 0.15s, background 0.15s, border-color 0.15s;
+            }
+            .theme-toggle-btn:hover {
+                background: var(--accent-subtle);
+                color: var(--accent);
+                border-color: var(--accent);
+            }
+            /* Sun/moon icon swap — stacked, rotate + fade between states */
+            .theme-toggle-btn {
+                position: relative;
+                overflow: hidden;
+            }
+            .theme-toggle-btn i {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+                opacity: 1;
+                transition:
+                    transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 220ms ease-in-out;
+            }
+            .theme-toggle-btn .bi-sun {
+                transform: translate(-50%, -50%) rotate(-90deg) scale(0.4);
+                opacity: 0;
+            }
+            [data-theme="dark"] .theme-toggle-btn .bi-moon-stars {
+                transform: translate(-50%, -50%) rotate(90deg) scale(0.4);
+                opacity: 0;
+            }
+            [data-theme="dark"] .theme-toggle-btn .bi-sun {
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            .theme-toggle-btn:active {
+                transform: scale(0.92);
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .theme-toggle-btn i { transition: none; }
             }
 
             *,
@@ -852,8 +1059,8 @@
                 transition: color 0.15s;
             }
             .vcluster-btn:hover { color: var(--accent); }
-            .vcluster-btn.active-like { color: var(--accent); }
-            .vcluster-btn.active-dislike { color: var(--error); }
+            .vcluster-btn.active-like { color: var(--vote-up); }
+            .vcluster-btn.active-dislike { color: var(--vote-down); }
 
             .vcluster-count {
                 font-size: 0.82rem;
@@ -862,8 +1069,8 @@
                 text-align: center;
                 font-variant-numeric: tabular-nums;
             }
-            .vcluster-count.like-count { color: var(--accent); }
-            .vcluster-count.dislike-count { color: var(--error); }
+            .vcluster-count.like-count { color: var(--vote-up); }
+            .vcluster-count.dislike-count { color: var(--vote-down); }
             .vcluster-sep {
                 color: var(--border-strong);
                 font-size: 0.82rem;
@@ -1151,8 +1358,8 @@
                 color: var(--accent);
                 background: var(--accent-subtle);
             }
-            .fb-comment-react.active-like { color: var(--accent); }
-            .fb-comment-react.active-dislike { color: var(--error); }
+            .fb-comment-react.active-like { color: var(--vote-up); }
+            .fb-comment-react.active-dislike { color: var(--vote-down); }
 
             .fb-comment-dot {
                 color: var(--border-strong);
@@ -1566,6 +1773,11 @@
                     </h1>
                 </div>
                 <div class="user-info d-flex align-items-center gap-2">
+                    <button type="button" class="theme-toggle-btn" id="themeToggleBtn"
+                            onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">
+                        <i class="bi bi-moon-stars"></i>
+                        <i class="bi bi-sun"></i>
+                    </button>
                     <div class="dropdown">
                         <button class="notif-bell-btn" id="notifBell"
                                 data-bs-toggle="dropdown" data-bs-auto-close="outside"
@@ -1673,6 +1885,37 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
+            function toggleTheme() {
+                var root = document.documentElement;
+                var current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                var next = current === 'dark' ? 'light' : 'dark';
+
+                // Enable transitions only for the switch, then strip after settle
+                root.classList.add('theme-switching');
+                root.setAttribute('data-theme', next);
+                root.setAttribute('data-bs-theme', next);
+                try { localStorage.setItem('theme', next); } catch (e) {}
+
+                var favicon = document.getElementById('favicon');
+                if (favicon) {
+                    favicon.href = next === 'dark'
+                        ? "{% static 'feedback/brand/icon-color-on-dark.svg' %}"
+                        : "{% static 'feedback/brand/icon-color-on-light.svg' %}";
+                }
+
+                window.setTimeout(function () {
+                    root.classList.remove('theme-switching');
+                }, 320);
+            }
+
+            // Sync favicon to initial theme on load
+            (function () {
+                var favicon = document.getElementById('favicon');
+                if (favicon && document.documentElement.getAttribute('data-theme') === 'dark') {
+                    favicon.href = "{% static 'feedback/brand/icon-color-on-dark.svg' %}";
+                }
+            })();
+
             function markAllRead() {
                 fetch("{% url 'mark_notifications_read' %}", {
                     method: 'POST',

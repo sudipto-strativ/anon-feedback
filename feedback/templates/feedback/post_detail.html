@@ -189,7 +189,7 @@
                 {% if post.like_count or post.dislike_count %}
                 <div class="d-flex align-items-center gap-2">
                     {% if post.like_count %}
-                    <span class="d-flex align-items-center gap-1" style="font-size:0.8rem; font-weight:600; color:var(--accent);">
+                    <span class="d-flex align-items-center gap-1" style="font-size:0.8rem; font-weight:600; color:var(--vote-up);">
                         <i class="bi bi-hand-thumbs-up-fill"></i> {{ post.like_count }}
                     </span>
                     {% endif %}
@@ -197,7 +197,7 @@
                     <span style="color:var(--border-strong);">·</span>
                     {% endif %}
                     {% if post.dislike_count %}
-                    <span class="d-flex align-items-center gap-1" style="font-size:0.8rem; font-weight:600; color:var(--error);">
+                    <span class="d-flex align-items-center gap-1" style="font-size:0.8rem; font-weight:600; color:var(--vote-down);">
                         <i class="bi bi-hand-thumbs-down-fill"></i> {{ post.dislike_count }}
                     </span>
                     {% endif %}
