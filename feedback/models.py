@@ -219,6 +219,25 @@ class Notification(models.Model):
         return f"Notification for {self.recipient.username} → Post #{self.post_id}"
 
 
+class SlackQueueItem(models.Model):
+    EVENT_POST = 'post'
+    EVENT_COMMENT = 'comment'
+    EVENT_CHOICES = [
+        (EVENT_POST, 'New Post'),
+        (EVENT_COMMENT, 'New Comment'),
+    ]
+
+    event_type = models.CharField(max_length=20, choices=EVENT_CHOICES)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"SlackQueue [{self.event_type}] at {self.created_at:%Y-%m-%d %H:%M}"
+
+
 class Vote(models.Model):
     VOTE_CHOICES = [('like', 'Like'), ('dislike', 'Dislike')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')

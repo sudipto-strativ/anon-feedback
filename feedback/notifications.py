@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 from django.urls import reverse
-from .models import Comment, Notification, NotificationEmail, SlackConfig
+from .models import Comment, Notification, NotificationEmail, SlackConfig, SlackQueueItem
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def notify_new_post(post):
             f":mega: *<{url}|New Feedback Posted>*\n"
             f">{post.content[:200]}"
         )
-        send_slack_message(msg)
+        SlackQueueItem.objects.create(event_type=SlackQueueItem.EVENT_POST, message=msg)
 
     if not getattr(settings, 'EMAIL_NOTIFICATION_ENABLED', True):
         return
@@ -90,7 +90,7 @@ def notify_new_comment(comment):
             f":speech_balloon: *<{url}|New Comment>* · _{role_display}_\n"
             f">{comment.content[:200]}"
         )
-        send_slack_message(msg)
+        SlackQueueItem.objects.create(event_type=SlackQueueItem.EVENT_COMMENT, message=msg)
 
     if not getattr(settings, 'EMAIL_NOTIFICATION_ENABLED', True):
         return
