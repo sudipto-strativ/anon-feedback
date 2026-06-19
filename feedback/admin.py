@@ -20,8 +20,8 @@ admin.site.register(User, UserAdmin)
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('id', 'author', 'status', 'created_at', 'updated_at')
-    list_filter = ('status', 'created_at')
+    list_display = ('id', 'author', 'status', 'target_role', 'created_at', 'updated_at')
+    list_filter = ('status', 'target_role', 'created_at')
     search_fields = ('content', 'author__username')
     readonly_fields = ('created_at', 'updated_at')
     date_hierarchy = 'created_at'
