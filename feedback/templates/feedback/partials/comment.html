@@ -6,10 +6,12 @@
 
     <div class="fb-comment-avatar
         {% if role == 'hr' %}fb-comment-avatar-hr
+        {% elif role == 'accountant' %}fb-comment-avatar-accountant
         {% elif role == 'ceo' %}fb-comment-avatar-ceo
         {% elif role == 'admin' %}fb-comment-avatar-admin
         {% else %}fb-comment-avatar-employee{% endif %}">
         {% if role == 'hr' %}<i class="bi bi-briefcase-fill"></i>
+        {% elif role == 'accountant' %}<i class="bi bi-calculator-fill"></i>
         {% elif role == 'ceo' %}<i class="bi bi-star-fill"></i>
         {% elif role == 'admin' %}<i class="bi bi-shield-fill"></i>
         {% else %}<i class="bi bi-person-fill"></i>{% endif %}
@@ -18,6 +20,7 @@
     <div class="fb-comment-right">
         <div class="fb-comment-bubble
             {% if role == 'hr' %}fb-comment-bubble-hr
+            {% elif role == 'accountant' %}fb-comment-bubble-accountant
             {% elif role == 'ceo' %}fb-comment-bubble-ceo
             {% elif role == 'admin' %}fb-comment-bubble-admin
             {% else %}fb-comment-bubble-employee{% endif %}">
@@ -25,6 +28,8 @@
             <div class="fb-comment-meta">
                 {% if role == 'hr' %}
                     <span class="role-badge role-badge-hr"><i class="bi bi-briefcase-fill"></i> HR</span>
+                {% elif role == 'accountant' %}
+                    <span class="role-badge role-badge-accountant"><i class="bi bi-calculator-fill"></i> Accountant</span>
                 {% elif role == 'ceo' %}
                     <span class="role-badge role-badge-ceo"><i class="bi bi-star-fill"></i> CEO</span>
                 {% elif role == 'admin' %}

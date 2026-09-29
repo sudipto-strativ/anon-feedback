@@ -48,7 +48,7 @@ Loaded from `.env` (see `.env.example`):
 
 ### Models (`feedback/models.py`)
 
-- **UserProfile** — 1:1 with Django User; roles: `member` (was "employee"), `hr`, `ceo`
+- **UserProfile** — 1:1 with Django User; roles: `member` (was "employee"), `hr`, `accountant`, `ceo`, `admin`
 - **Post** — core feedback; status: `pending/in_progress/done/rejected`; has ETA + remark
 - **Comment** — on posts; content optional (image-only allowed); supports Markdown
 - **Vote** — like/dislike on posts or comments; unique per user+target; same vote = delete, different = switch

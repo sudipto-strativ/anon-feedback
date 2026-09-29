@@ -143,6 +143,8 @@ def user_role_badge(user):
         role = user.profile.role
         if role == 'hr':
             return f'<span class="role-badge-hr">HR</span>'
+        elif role == 'accountant':
+            return f'<span class="role-badge-accountant">Accountant</span>'
         elif role == 'ceo':
             return f'<span class="role-badge-ceo">CEO</span>'
         elif role == 'admin':

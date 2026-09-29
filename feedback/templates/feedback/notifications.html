@@ -50,6 +50,7 @@
                 <div style="font-size:0.88rem; line-height:1.45;">
                     <span class="role-badge role-badge-{{ n.comment.author.profile.role }}">
                         {% if n.comment.author.profile.role == 'hr' %}HR
+                        {% elif n.comment.author.profile.role == 'accountant' %}Accountant
                         {% elif n.comment.author.profile.role == 'ceo' %}CEO
                         {% elif n.comment.author.profile.role == 'admin' %}Admin
                         {% else %}Member{% endif %}

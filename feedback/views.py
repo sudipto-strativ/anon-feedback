@@ -167,7 +167,7 @@ def post_detail(request, pk):
     can_update_status = False
     try:
         role = request.user.profile.role
-        if role in ('ceo', 'hr', 'admin'):
+        if role in ('ceo', 'hr', 'accountant', 'admin'):
             can_update_status = True
             status_form = StatusUpdateForm(instance=post)
     except Exception:
@@ -318,7 +318,7 @@ def vote_comment(request, pk):
 @login_required
 @require_POST
 def update_status(request, pk):
-    """Update the status of a post. Only CEO and HR can do this."""
+    """Update the status of a post. Only CEO, HR, and Accountant can do this."""
     post = get_object_or_404(Post, pk=pk)
     if not _can_view_post(request.user, post):
         return JsonResponse({'error': 'Not found'}, status=404)
@@ -329,7 +329,7 @@ def update_status(request, pk):
     except Exception:
         role = 'employee'
 
-    if role not in ('ceo', 'hr', 'admin'):
+    if role not in ('ceo', 'hr', 'accountant', 'admin'):
         return JsonResponse({'error': 'Permission denied'}, status=403)
 
     form = StatusUpdateForm(request.POST, instance=post)

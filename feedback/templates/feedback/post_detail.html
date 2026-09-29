@@ -243,13 +243,13 @@
             </button>
         </div>
 
-        <!-- Status update form (CEO/HR only) -->
+        <!-- Status update form (CEO/HR/Accountant only) -->
         {% if can_update_status %}
         <div class="status-update-block" style="margin: 4px 18px 18px;">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-pencil-square" style="color:var(--accent);"></i>
                 <span style="font-weight:500; font-size:0.92rem; color:var(--text-primary);">Update status</span>
-                <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% elif request.user.profile.role == 'admin' %}role-badge-admin{% else %}role-badge-ceo{% endif %}">
+                <span class="role-badge {% if request.user.profile.role == 'hr' %}role-badge-hr{% elif request.user.profile.role == 'accountant' %}role-badge-accountant{% elif request.user.profile.role == 'admin' %}role-badge-admin{% else %}role-badge-ceo{% endif %}">
                     {{ request.user.profile.role_display }}
                 </span>
             </div>
