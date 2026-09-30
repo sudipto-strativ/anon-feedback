@@ -2,7 +2,7 @@
 {% with user_vote=comment_vote_map|get_item:comment.id %}
 {% with role=comment.author.profile.role %}
 
-<div class="fb-comment">
+<div class="fb-comment" id="comment-{{ comment.id }}">
 
     <div class="fb-comment-avatar
         {% if role == 'hr' %}fb-comment-avatar-hr

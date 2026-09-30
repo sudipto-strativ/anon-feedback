@@ -1714,6 +1714,12 @@
                     <i class="bi bi-bookmark"></i> Favourites
                 </a>
                 <a
+                    href="{% url 'ceo_answers' %}"
+                    class="{% if request.resolver_match.url_name == 'ceo_answers' %}active{% endif %}"
+                >
+                    <i class="bi bi-chat-square-quote"></i> CEO Answers
+                </a>
+                <a
                     href="{% url 'notifications' %}"
                     class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}"
                     style="position:relative;"

@@ -95,6 +95,29 @@ def feed(request):
 
 
 @login_required
+def ceo_answers(request):
+    """Table of every CEO comment, so replies don't get missed in the feed."""
+    search_query = request.GET.get('q', '').strip()
+
+    comments = Comment.objects.filter(
+        author__profile__role='ceo',
+        post__in=Post.objects.filter(_visible_posts_q(request.user)),
+    ).select_related('post', 'author', 'author__profile').order_by('-created_at')
+
+    if search_query:
+        comments = comments.filter(Q(content__icontains=search_query) | Q(post__content__icontains=search_query))
+
+    paginator = Paginator(comments, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'feedback/ceo_answers.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    })
+
+
+@login_required
 def list_view(request):
     """List view with search and status filter."""
     status_filter = request.GET.get('status', '')

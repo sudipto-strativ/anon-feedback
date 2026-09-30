@@ -1,0 +1,138 @@
+{% extends "feedback/base.html" %}
+{% load feedback_extras %}
+
+{% block title %}CEO Answers — Strativ Voice{% endblock %}
+{% block page_title %}CEO Answers{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="section-title mb-2 d-block">
+            <span class="step-number">01</span><span class="step-dash">—</span>Overview
+        </span>
+        <h1>CEO Answers</h1>
+        <p style="color:var(--text-secondary); font-size:0.88rem; margin-top:4px;">
+            Every reply from the CEO in one place, so a good answer never gets buried in the feed.
+        </p>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="card mb-4" style="border: 1px solid var(--border-subtle); box-shadow: var(--shadow-xs);">
+    <div class="card-body" style="padding: 18px 22px;">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-9">
+                <label class="form-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text" style="background:var(--bg-surface);border-color:var(--border-default);border-right:none;color:var(--text-tertiary);">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ search_query }}"
+                           class="form-control"
+                           style="border-left:none;"
+                           placeholder="Search posts or CEO answers…">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-strativ btn-primary flex-fill">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    {% if search_query %}
+                    <a href="{% url 'ceo_answers' %}" class="btn-strativ btn-secondary" title="Clear search" style="padding:0 12px;">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if search_query %}
+<p class="mb-3" style="color:var(--text-secondary); font-size:0.88rem;">
+    Showing <strong style="color:var(--text-primary);">{{ page_obj.paginator.count }}</strong>
+    result{{ page_obj.paginator.count|pluralize }} for "<strong style="color:var(--text-primary);">{{ search_query }}</strong>"
+</p>
+{% endif %}
+
+{% if page_obj %}
+<div class="card" style="border: 1px solid var(--border-subtle); overflow:hidden; box-shadow: var(--shadow-xs);">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr style="background:var(--bg-subtle); border-bottom:1px solid var(--border-subtle);">
+                    <th class="ps-4 py-3" style="font-size:0.7rem; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); width:38%;">Post</th>
+                    <th class="py-3" style="font-size:0.7rem; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary);">Comment</th>
+                    <th class="py-3" style="font-size:0.7rem; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); white-space:nowrap;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in page_obj %}
+                <tr style="border-bottom:1px solid var(--border-subtle);">
+                    <td class="ps-4 py-3" style="max-width:360px;">
+                        <a href="{% url 'post_detail' comment.post.id %}#comment-{{ comment.id }}" class="text-decoration-none"
+                           style="color:var(--text-primary); font-weight:500;" title="{{ comment.post.content }}">
+                            {{ comment.post.content|truncate_chars:80 }}
+                        </a>
+                    </td>
+                    <td class="py-3">
+                        <div class="md-content" style="font-size:0.88rem; color:var(--text-primary);">
+                            {{ comment.content|truncate_chars:220|render_markdown }}
+                        </div>
+                    </td>
+                    <td class="py-3 post-meta" style="white-space:nowrap;">{{ comment.created_at|timesince_short }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4" aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="fb-card text-center" style="padding: 56px 24px;">
+    <div style="font-size: 2.4rem; color: var(--text-tertiary); margin-bottom: 14px;">
+        <i class="bi bi-chat-square-quote"></i>
+    </div>
+    <p style="color: var(--text-secondary); font-size: 0.92rem; margin: 0;">
+        {% if search_query %}
+            No CEO answers matched your search.
+            <a href="{% url 'ceo_answers' %}" style="color:var(--accent); font-weight:500;">Clear search</a>
+        {% else %}
+            No CEO answers yet.
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

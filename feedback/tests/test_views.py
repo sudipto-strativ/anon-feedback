@@ -27,6 +27,7 @@ class AuthRedirectTest(TestCase):
         ('list_view', []),
         ('post_create', []),
         ('favourites', []),
+        ('ceo_answers', []),
     ]
 
     def test_unauthenticated_redirects(self):
@@ -118,6 +119,47 @@ class ListViewTest(TestCase):
     def test_context_contains_status_choices(self):
         response = self.client.get(reverse('list_view'))
         self.assertIn('STATUS_CHOICES', response.context)
+
+
+class CeoAnswersViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = make_user()
+        self.ceo = make_user('ceo_user', role='ceo')
+        self.client.login(username='testuser', password='pass')
+
+    def test_get_returns_200(self):
+        response = self.client.get(reverse('ceo_answers'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_only_ceo_comments_listed(self):
+        post = make_post(self.user, 'a post')
+        Comment.objects.create(post=post, author=self.ceo, content='CEO reply')
+        Comment.objects.create(post=post, author=self.user, content='member reply')
+        response = self.client.get(reverse('ceo_answers'))
+        comments = list(response.context['page_obj'])
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0].content, 'CEO reply')
+
+    def test_respects_post_visibility(self):
+        hr_user = make_user('hr_user', role='hr')
+        hr_only_post = make_post(hr_user, 'hr only post')
+        hr_only_post.target_role = 'hr'
+        hr_only_post.save()
+        Comment.objects.create(post=hr_only_post, author=self.ceo, content='hidden CEO reply')
+        response = self.client.get(reverse('ceo_answers'))
+        comments = list(response.context['page_obj'])
+        self.assertEqual(len(comments), 0)
+
+    def test_search_filter(self):
+        post = make_post(self.user, 'lunch policy question')
+        Comment.objects.create(post=post, author=self.ceo, content='we are updating it')
+        other_post = make_post(self.user, 'unrelated post')
+        Comment.objects.create(post=other_post, author=self.ceo, content='different topic')
+        response = self.client.get(reverse('ceo_answers') + '?q=lunch')
+        comments = list(response.context['page_obj'])
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0].post_id, post.id)
 
 
 class PostDetailViewTest(TestCase):

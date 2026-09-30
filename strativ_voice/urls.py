@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', feedback_views.feed, name='feed'),
     path('list/', feedback_views.list_view, name='list_view'),
+    path('ceo-answers/', feedback_views.ceo_answers, name='ceo_answers'),
     path('post/new/', feedback_views.post_create, name='post_create'),
     path('post/<int:pk>/', feedback_views.post_detail, name='post_detail'),
     path('post/<int:pk>/vote/', feedback_views.vote_post, name='vote_post'),

@@ -6,6 +6,7 @@ app_name = 'feedback'
 urlpatterns = [
     path('', views.feed, name='feed'),
     path('list/', views.list_view, name='list_view'),
+    path('ceo-answers/', views.ceo_answers, name='ceo_answers'),
     path('post/new/', views.post_create, name='post_create'),
     path('post/<int:pk>/', views.post_detail, name='post_detail'),
     path('post/<int:pk>/vote/', views.vote_post, name='vote_post'),
