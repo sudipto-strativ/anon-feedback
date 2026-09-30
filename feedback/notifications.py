@@ -160,6 +160,8 @@ def notify_status_update(post, updated_by):
     """Notify about a status update via Slack (public posts only)."""
     if post.target_role:
         return
+    if post.status == 'pending':
+        return
 
     url = _post_url(post)
     eta_str = f" | ETA: {post.eta}" if post.eta else ""

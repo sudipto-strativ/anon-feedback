@@ -177,8 +177,15 @@ class NotifyStatusUpdateTest(TestCase):
 
     @patch('feedback.notifications.send_slack_message')
     def test_slack_called(self, mock_slack):
+        self.post.status = 'in_progress'
         notify_status_update(self.post, self.updater)
         mock_slack.assert_called_once()
+
+    @patch('feedback.notifications.send_slack_message')
+    def test_pending_status_not_posted_to_slack(self, mock_slack):
+        self.post.status = 'pending'
+        notify_status_update(self.post, self.updater)
+        mock_slack.assert_not_called()
 
     @patch('feedback.notifications.send_slack_message')
     def test_message_contains_status(self, mock_slack):
@@ -191,6 +198,7 @@ class NotifyStatusUpdateTest(TestCase):
     @patch('feedback.notifications.send_slack_message')
     def test_message_contains_eta_when_set(self, mock_slack):
         from datetime import date
+        self.post.status = 'in_progress'
         self.post.eta = date(2025, 12, 31)
         notify_status_update(self.post, self.updater)
         message = mock_slack.call_args[0][0]
@@ -205,7 +213,8 @@ class NotifyStatusUpdateTest(TestCase):
         self.assertIn('All resolved!', message)
 
     @patch('feedback.notifications.send_slack_message')
-    def test_pending_uses_content_in_preview(self, mock_slack):
+    def test_in_progress_uses_content_in_preview(self, mock_slack):
+        self.post.status = 'in_progress'
         notify_status_update(self.post, self.updater)
         message = mock_slack.call_args[0][0]
         self.assertIn('Some feedback', message)
