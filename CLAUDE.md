@@ -43,6 +43,10 @@ Loaded from `.env` (see `.env.example`):
 | `DEFAULT_FROM_EMAIL` | — | |
 | `SLACK_WEBHOOK_URL` | — | DB config takes precedence |
 | `SITE_URL` | `http://localhost:8000` | used in notification links |
+| `ANTHROPIC_API_KEY` | — | enables Claude Haiku classification backend |
+| `GEMINI_API_KEY` | — | enables Gemini Flash backend (free tier available) |
+| `AI_CLASSIFICATION_ENABLED` | `False` | master switch for AI post labeling |
+| `AI_CLASSIFIER_BACKEND` | inferred from keys (gemini > anthropic > stub) | `stub`/`anthropic`/`gemini` |
 
 ## Architecture
 

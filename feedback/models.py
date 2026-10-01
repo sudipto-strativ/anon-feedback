@@ -58,6 +58,13 @@ class Post(models.Model):
         ('done', 'Done'),
         ('rejected', 'Rejected'),
     ]
+    AI_LABEL_CHOICES = [
+        ('constructive', 'Constructive'),
+        ('critical_question', 'Critical Question'),
+        ('serious_concern', 'Serious Concern'),
+        ('personal_attack', 'Personal Attack'),
+        ('logistics', 'Logistics'),
+    ]
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -71,6 +78,19 @@ class Post(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='status_updates'
     )
     remark = models.TextField(blank=True, default='')
+    # AI classification — populated after creation by feedback/ai.py.
+    # Blank label == not yet classified (or classification disabled/failed).
+    ai_label = models.CharField(
+        max_length=20, blank=True, default='', choices=AI_LABEL_CHOICES,
+        help_text='AI-assigned label for the nature of this post.',
+    )
+    ai_flag_individual = models.BooleanField(
+        default=False, help_text='AI flagged this post as naming a specific individual.',
+    )
+    ai_flag_toxic = models.BooleanField(
+        default=False, help_text='AI flagged this post as abusive or containing profanity.',
+    )
+    ai_label_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -104,6 +124,26 @@ class Post(models.Model):
             'rejected': 'danger',
         }
         return colors.get(self.status, 'secondary')
+
+    def get_ai_label_color(self):
+        colors = {
+            'constructive': 'success',
+            'critical_question': 'primary',
+            'serious_concern': 'warning',
+            'personal_attack': 'danger',
+            'logistics': 'secondary',
+        }
+        return colors.get(self.ai_label, 'secondary')
+
+    def get_ai_label_icon(self):
+        icons = {
+            'constructive': 'bi-lightbulb',
+            'critical_question': 'bi-question-circle',
+            'serious_concern': 'bi-exclamation-triangle',
+            'personal_attack': 'bi-shield-exclamation',
+            'logistics': 'bi-box-seam',
+        }
+        return icons.get(self.ai_label, 'bi-tag')
 
 
 class Comment(models.Model):

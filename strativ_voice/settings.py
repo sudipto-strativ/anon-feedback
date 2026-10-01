@@ -151,6 +151,30 @@ SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', '')
 # Notification settings
 EMAIL_NOTIFICATION_ENABLED = True
 
+# AI post classification
+# Classification is a best-effort side effect and never blocks post creation.
+# Backends: 'stub' (heuristic, no key), 'anthropic' (Claude Haiku), 'gemini'
+# (Gemini Flash, free tier available). AI_CLASSIFIER_BACKEND picks one; if not
+# set, it is inferred from whichever API key is present (Gemini preferred as it
+# has a free tier), falling back to the stub.
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+# Optional Gemini model override; blank uses GeminiClassifier.DEFAULT_MODEL.
+# gemini-2.0-flash / gemini-2.5-flash-lite have higher free-tier rate limits.
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL', '')
+AI_CLASSIFICATION_ENABLED = os.environ.get('AI_CLASSIFICATION_ENABLED', 'False') == 'True'
+
+
+def _default_ai_backend():
+    if GEMINI_API_KEY:
+        return 'gemini'
+    if ANTHROPIC_API_KEY:
+        return 'anthropic'
+    return 'stub'
+
+
+AI_CLASSIFIER_BACKEND = os.environ.get('AI_CLASSIFIER_BACKEND', _default_ai_backend())
+
 # Logging
 LOGGING = {
     'version': 1,

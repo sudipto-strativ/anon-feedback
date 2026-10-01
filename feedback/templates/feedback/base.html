@@ -1118,6 +1118,43 @@
                 border: 1px solid #FECACA;
             }
 
+            /* AI classification label + flags */
+            .ai-label-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+            .ai-label-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 0.7rem;
+                font-weight: 600;
+                padding: 3px 10px;
+                border-radius: 9999px;
+                font-family: var(--font-sans);
+                border: 1px solid transparent;
+            }
+            .ai-label-success { background: var(--success-bg); color: var(--success-fg); border-color: #A7F3D0; }
+            .ai-label-primary { background: var(--info-bg); color: var(--info-fg); border-color: #BFDBFE; }
+            .ai-label-warning { background: var(--warning-bg); color: var(--warning-fg); border-color: #FDE68A; }
+            .ai-label-danger { background: var(--error-bg); color: var(--error-fg); border-color: #FECACA; }
+            .ai-label-secondary { background: var(--bg-subtle); color: var(--text-secondary); border-color: var(--border-default); }
+            .ai-flag {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 0.66rem;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 9999px;
+                background: var(--error-bg);
+                color: var(--error-fg);
+                border: 1px solid #FECACA;
+            }
+
             /* Compose box */
             .compose-box {
                 background: var(--bg-surface);

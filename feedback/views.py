@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 
 from .forms import CommentForm, PostForm, RegisterForm, StatusUpdateForm
 from .models import Comment, CommentImage, Favourite, Notification, Post, PostAttachment, Vote
+from .ai import apply_ai_classification
 from .notifications import create_comment_notifications, create_status_notification, notify_new_comment, notify_new_post, notify_status_update
 
 
@@ -232,6 +233,7 @@ def post_create(request):
             post.save()
             for f in form.cleaned_data.get('attachments') or []:
                 PostAttachment.objects.create(post=post, file=f)
+            apply_ai_classification(post)
             notify_new_post(post)
             messages.success(request, 'Your feedback has been posted anonymously.')
             return redirect('feed')

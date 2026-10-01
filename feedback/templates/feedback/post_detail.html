@@ -137,6 +137,19 @@
 
         <!-- Full content -->
         <div class="fb-card-body">
+            {% if post.ai_label %}
+            <div class="ai-label-row">
+                <span class="ai-label-badge ai-label-{{ post.get_ai_label_color }}">
+                    <i class="bi {{ post.get_ai_label_icon }}"></i> {{ post.get_ai_label_display }}
+                </span>
+                {% if post.ai_flag_toxic %}
+                <span class="ai-flag" title="Flagged: strong or profane language"><i class="bi bi-exclamation-octagon-fill"></i> Strong language</span>
+                {% endif %}
+                {% if post.ai_flag_individual %}
+                <span class="ai-flag" title="Flagged: names a specific individual"><i class="bi bi-person-exclamation"></i> Names someone</span>
+                {% endif %}
+            </div>
+            {% endif %}
             <div class="md-content" style="font-size:0.98rem;">{{ post.content|render_markdown }}</div>
         </div>
 
